@@ -32,7 +32,7 @@
 | 환경변수 | python-dotenv 1.0.1 |
 | AI 연동 | openai SDK ≥ 1.52.0 (SSAFY GMS API) |
 | DB | SQLite3 (개발) |
-| 이미지 처리 | Pillow 10.4.0 |
+| 이미지 처리 | Pillow 10.4.0 (구현 예정) |
 
 ---
 
