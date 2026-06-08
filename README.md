@@ -11,7 +11,7 @@
 | WBS | 작업 내용 | 담당자 | 기간 | 상태 |
 | :--- | :--- | :---: | :---: | :---: |
 | **1.0** | **Phase 1. 기획·설계** ([Figma 화면 설계](https://www.figma.com/design/XIFsamVlPDe7NpwtoTzlPA/CardFit-%E2%80%94-%EC%9B%B9%EC%82%AC%EC%9D%B4%ED%8A%B8--Hi-Fi-?node-id=0-1&p=f&t=f0qBGxNdV0SMVPfg-0), [Notion API 명세서](https://app.notion.com/p/API-27bec94529fd82d2a5d68120a1cf0646?source=copy_link)) | 팀 공통 | 06/01 ~ 06/05 | 🟢 진행 중 |
-| **2.0** | **Phase 2. 백엔드 개발** (Django 세팅, Gemini AI 연동) | 박민정, 황서현 | 06/03 ~ 06/15 | ⬜ 시작 전 |
+| **2.0** | **Phase 2. 백엔드 개발** (Django 세팅, GMS AI 연동) | 박민정, 황서현 | 06/03 ~ 06/15 | ⬜ 시작 전 |
 | **3.0** | **Phase 3. 프론트엔드 개발** (Vue 세팅, 소비 리포트 차트) | 김유진, 황서현 | 06/03 ~ 06/17 | ⬜ 시작 전 |
 | **4.0** | **Phase 4. 통합·테스트** (API 통합, 시나리오 테스트) | 팀 공통 | 06/15 ~ 06/22 | ⬜ 시작 전 |
 | **5.0** | **Phase 5. 발표 준비** (산출물 정리, 최종 발표) | 팀 공통 | 06/22 ~ 06/25 | ⬜ 시작 전 |
