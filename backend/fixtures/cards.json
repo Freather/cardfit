@@ -1,0 +1,93 @@
+[
+  {
+    "model": "cards.card",
+    "pk": 1,
+    "fields": {
+      "card_company": "삼성카드",
+      "card_name": "삼성카드 taptap O",
+      "card_type": "credit",
+      "annual_fee": 10000,
+      "min_prev_month_spending": 300000,
+      "apply_url": "https://www.samsungcard.com/home/card/cardinfo/PGHPPCCCardCardinfoDetails001?code=AAP1483",
+      "synced_at": "2026-06-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "cards.card",
+    "pk": 2,
+    "fields": {
+      "card_company": "삼성카드",
+      "card_name": "삼성카드 iD VITA ALL STATION",
+      "card_type": "credit",
+      "annual_fee": 20000,
+      "min_prev_month_spending": 500000,
+      "apply_url": "https://www.samsungcard.com/home/card/cardinfo/PGHPPCCCardCardinfoDetails001?code=AAP1474",
+      "synced_at": "2026-06-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "cards.card",
+    "pk": 3,
+    "fields": {
+      "card_company": "삼성카드",
+      "card_name": "삼성카드 & MILEAGE PLATINUM",
+      "card_type": "credit",
+      "annual_fee": 49000,
+      "min_prev_month_spending": 0,
+      "apply_url": "https://www.samsungcard.com/home/card/cardinfo/PGHPPCCCardCardinfoDetails001?code=AAP1452",
+      "synced_at": "2026-06-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "cards.card",
+    "pk": 4,
+    "fields": {
+      "card_company": "삼성카드",
+      "card_name": "삼성카드 THE iD. 1st",
+      "card_type": "credit",
+      "annual_fee": 150000,
+      "min_prev_month_spending": 0,
+      "apply_url": "https://www.samsungcard.com/home/card/cardinfo/PGHPPCCCardCardinfoDetails001?code=AAP1440",
+      "synced_at": "2026-06-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "cards.card",
+    "pk": 5,
+    "fields": {
+      "card_company": "삼성카드",
+      "card_name": "모니모A 카드",
+      "card_type": "credit",
+      "annual_fee": 10000,
+      "min_prev_month_spending": 300000,
+      "apply_url": "https://www.samsungcard.com/home/card/cardinfo/PGHPPCCCardCardinfoDetails001?code=AAP1492",
+      "synced_at": "2026-06-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "cards.card",
+    "pk": 6,
+    "fields": {
+      "card_company": "삼성카드",
+      "card_name": "K-패스 삼성체크카드",
+      "card_type": "debit",
+      "annual_fee": 0,
+      "min_prev_month_spending": 0,
+      "apply_url": "https://www.samsungcard.com/home/card/cardinfo/PGHPPCCCardCardinfoDetails001?code=ABP1800",
+      "synced_at": "2026-06-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "cards.card",
+    "pk": 7,
+    "fields": {
+      "card_company": "삼성카드",
+      "card_name": "삼성카드 체크카드",
+      "card_type": "debit",
+      "annual_fee": 0,
+      "min_prev_month_spending": 0,
+      "apply_url": "https://www.samsungcard.com/personal/card/check-card/UHPPCA0206M0.jsp",
+      "synced_at": "2026-06-01T00:00:00Z"
+    }
+  }
+]
