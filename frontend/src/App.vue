@@ -1,5 +1,15 @@
+<script setup>
+
+import AppNavbar
+from './components/common/AppNavbar.vue'
+import HomePage 
+from './pages/HomePage.vue';
+</script>
+
 <template>
-  <main class="min-h-screen bg-slate-50 text-slate-900">
-    <RouterView />
-  </main>
+
+<AppNavbar/>
+
+<router-view/>
+
 </template>
