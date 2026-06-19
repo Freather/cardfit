@@ -1,5 +1,6 @@
 export const benefitCategories = [
   { key: 'food', label: '식비' },
+  { key: 'fuel', label: '주유' },
   { key: 'transport', label: '교통' },
   { key: 'shopping', label: '쇼핑' },
   { key: 'communication', label: '통신' },

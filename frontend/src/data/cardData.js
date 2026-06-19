@@ -46,6 +46,14 @@ export const cardData = [
         condition_description: '온라인 쇼핑 할인',
       },
       {
+        id: 9,
+        benefit_category: 'fuel',
+        benefit_type: 'discount',
+        discount_rate: 5,
+        monthly_limit: 8000,
+        condition_description: '주유 할인',
+      },
+      {
         id: 4,
         benefit_category: 'communication',
         benefit_type: 'discount',
