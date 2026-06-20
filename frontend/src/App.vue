@@ -1,15 +1,8 @@
 <script setup>
-
-import AppNavbar
-from './components/common/AppNavbar.vue'
-import HomePage 
-from './pages/HomePage.vue';
+import AppNavbar from './components/common/AppNavbar.vue'
 </script>
 
 <template>
-
-<AppNavbar/>
-
-<router-view/>
-
+  <AppNavbar />
+  <router-view />
 </template>

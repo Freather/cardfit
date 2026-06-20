@@ -21,13 +21,20 @@ export const spendingService = {
     return api.delete(`/api/spending/${id}/`)
   },
 
-  uploadCsv(file) {
+  uploadCsv(file, surveyData = {}) {
     const formData = new FormData()
     formData.append('file', file)
+    
+    // 설문 정보 추가
+    if (surveyData.age_group) formData.append('age_group', surveyData.age_group)
+    if (surveyData.income_level) formData.append('income_level', surveyData.income_level)
+    if (surveyData.max_annual_fee !== undefined) formData.append('max_annual_fee', surveyData.max_annual_fee)
 
-    return api.post('/api/spending/upload-csv/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post('/api/spending/upload-csv/', formData)
+  },
+
+  fetchLatestSurvey() {
+    return api.get('/api/spending/')
   },
 
   fetchSpendingSummary(params = {}) {

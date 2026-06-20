@@ -7,15 +7,9 @@ export const spendingCategories = [
   { key: 'other_monthly', category: 'other', label: '기타', color: '#64748b', defaultValue: 30000 },
 ]
 
-export const defaultSpendingForm = spendingCategories.reduce(
-  (form, category) => ({
-    ...form,
-    [category.key]: category.defaultValue,
-  }),
-  {
-    input_type: 'manual',
-    age_group: '30s',
-    income_level: 'mid',
-    max_annual_fee: 30000,
-  },
-)
+export const defaultSpendingForm = {
+  input_type: 'csv',
+  age_group: '30s',
+  income_level: 'mid',
+  max_annual_fee: 30000,
+}

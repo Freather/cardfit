@@ -47,6 +47,45 @@ export const useSpendingStore = defineStore('spending', () => {
     }
   }
 
+  async function uploadCsv(file) {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const surveyData = {
+        age_group: spendingForm.value.age_group,
+        income_level: spendingForm.value.income_level,
+        max_annual_fee: spendingForm.value.max_annual_fee,
+      }
+      const response = await spendingService.uploadCsv(file, surveyData)
+      const data = response?.data ?? null
+      latestSurvey.value = data?.survey || latestSurvey.value
+      return data
+    } catch (err) {
+      error.value = err
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function fetchLatestSurvey() {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const { data } = await spendingService.fetchLatestSurvey()
+      latestSurvey.value = Array.isArray(data) && data.length ? data[0] : null
+      return latestSurvey.value
+    } catch (err) {
+      error.value = err
+      latestSurvey.value = null
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   async function fetchReportData(params = {}) {
     isLoading.value = true
     error.value = null
@@ -85,6 +124,8 @@ export const useSpendingStore = defineStore('spending', () => {
     updateSpendingForm,
     resetSpendingForm,
     createSurvey,
+    uploadCsv,
+    fetchLatestSurvey,
     fetchReportData,
   }
 })

@@ -50,10 +50,23 @@ class UserSurveyDetailSerializer(UserSurveySerializer):
 
 class CSVUploadSerializer(serializers.Serializer):
     file = serializers.FileField()
+    age_group = serializers.ChoiceField(choices=UserSurvey.AGE_GROUP_CHOICES, required=False, allow_blank=True)
+    income_level = serializers.ChoiceField(choices=UserSurvey.INCOME_LEVEL_CHOICES, required=False, allow_blank=True)
+    max_annual_fee = serializers.IntegerField(required=False, min_value=0, default=100000)
 
     def validate_file(self, value):
         if not value.name.endswith('.csv'):
             raise serializers.ValidationError('CSV 파일만 업로드 가능합니다.')
         if value.size > 5 * 1024 * 1024:
             raise serializers.ValidationError('파일 크기는 5MB 이하이어야 합니다.')
+        return value
+    
+    def validate_age_group(self, value):
+        if value == '' or value is None:
+            return '30s'
+        return value
+    
+    def validate_income_level(self, value):
+        if value == '' or value is None:
+            return 'mid'
         return value

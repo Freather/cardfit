@@ -61,8 +61,14 @@ class SpendingCSVUploadView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        file_serializer = CSVUploadSerializer(data=request.FILES)
-        file_serializer.is_valid(raise_exception=True)
+        # FormData와 FILES를 분리해서 처리
+        data_dict = request.data.copy()
+        data_dict.update(request.FILES)
+        
+        file_serializer = CSVUploadSerializer(data=data_dict)
+        if not file_serializer.is_valid():
+            return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
         uploaded_file = file_serializer.validated_data['file']
 
         try:
@@ -78,6 +84,11 @@ class SpendingCSVUploadView(APIView):
             cat = tx['category']
             category_totals[cat] = category_totals.get(cat, 0) + tx['amount']
 
+        # 설문 정보 추출 (요청에서 제공되지 않으면 기본값 사용)
+        age_group = file_serializer.validated_data.get('age_group', '30s')
+        income_level = file_serializer.validated_data.get('income_level', 'mid')
+        max_annual_fee = file_serializer.validated_data.get('max_annual_fee', 100000)
+
         with db_transaction.atomic():
             survey = UserSurvey.objects.create(
                 user=request.user,
@@ -88,9 +99,9 @@ class SpendingCSVUploadView(APIView):
                 entertainment_monthly=category_totals.get('entertainment', 0),
                 communication_monthly=category_totals.get('communication', 0),
                 other_monthly=category_totals.get('other', 0),
-                age_group='30s',
-                max_annual_fee=100000,
-                income_level='mid',
+                age_group=age_group,
+                max_annual_fee=max_annual_fee,
+                income_level=income_level,
             )
             SpendingTransaction.objects.bulk_create([
                 SpendingTransaction(survey=survey, **tx) for tx in parsed
