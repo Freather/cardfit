@@ -7,7 +7,8 @@ export const cardData = [
     card_type_display: '신용카드',
     annual_fee: 10000,
     min_prev_month_spending: 300000,
-    apply_url: 'https://www.samsungcard.com',
+    apply_url: 'https://www.samsungcard.com/home/card/cardinfo/PGHPPCCCardCardinfoDetails001?code=AAP1483',
+    image_url: 'https://static11.samsungcard.com/wcms/home/scard/image/personal/b_AAP1483.png',
     benefits: [
       {
         id: 1,
@@ -36,6 +37,7 @@ export const cardData = [
     annual_fee: 20000,
     min_prev_month_spending: 300000,
     apply_url: 'https://www.samsungcard.com',
+    image_url: 'https://static11.samsungcard.com/wcms/home/scard/image/personal/b_AAP1474.png',
     benefits: [
       {
         id: 3,
@@ -71,7 +73,8 @@ export const cardData = [
     card_type_display: '신용카드',
     annual_fee: 49000,
     min_prev_month_spending: 0,
-    apply_url: 'https://www.samsungcard.com',
+    apply_url: 'https://www.samsungcard.com/home/card/cardinfo/PGHPPCCCardCardinfoDetails001?code=AAP1452',
+    image_url: 'https://static11.samsungcard.com/wcms/home/scard/image/personal/b_AAP1452.png',
     benefits: [
       {
         id: 5,
@@ -91,7 +94,8 @@ export const cardData = [
     card_type_display: '신용카드',
     annual_fee: 20000,
     min_prev_month_spending: 500000,
-    apply_url: 'https://www.samsungcard.com',
+    apply_url: 'https://www.samsungcard.com/home/card/cardinfo/PGHPPCCCardCardinfoDetails001?code=AAP1474',
+    image_url: 'https://static11.samsungcard.com/wcms/home/scard/image/personal/b_AAP1474.png',
     benefits: [
       {
         id: 6,
@@ -111,7 +115,8 @@ export const cardData = [
     card_type_display: '신용카드',
     annual_fee: 10000,
     min_prev_month_spending: 300000,
-    apply_url: 'https://www.samsungcard.com',
+    apply_url: 'https://www.samsungcard.com/home/card/cardinfo/PGHPPCCCardCardinfoDetails001?code=AAP1492',
+    image_url: 'https://static11.samsungcard.com/wcms/home/scard/image/personal/b_AAP1492.png',
     benefits: [
       {
         id: 7,
@@ -131,7 +136,8 @@ export const cardData = [
     card_type_display: '체크카드',
     annual_fee: 0,
     min_prev_month_spending: 0,
-    apply_url: 'https://www.samsungcard.com',
+    apply_url: 'https://www.samsungcard.com/home/card/cardinfo/PGHPPCCCardCardinfoDetails001?code=ABP1800',
+    image_url: 'https://static11.samsungcard.com/wcms/home/scard/image/personal/b_ABP1800.png',
     benefits: [
       {
         id: 8,

@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny
 from django.shortcuts import get_object_or_404
 
 from .models import Card, CardBenefit
@@ -9,7 +9,8 @@ from .serializers import CardListSerializer, CardDetailSerializer, CardBenefitSe
 
 
 class CardListView(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    authentication_classes = []
+    permission_classes = [AllowAny]
 
     def get(self, request):
         queryset = Card.objects.prefetch_related('benefits').all()
@@ -30,7 +31,8 @@ class CardListView(APIView):
 
 
 class CardDetailView(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    authentication_classes = []
+    permission_classes = [AllowAny]
 
     def get(self, request, pk):
         card = get_object_or_404(Card, pk=pk)
@@ -39,7 +41,8 @@ class CardDetailView(APIView):
 
 
 class CardBenefitListView(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    authentication_classes = []
+    permission_classes = [AllowAny]
 
     def get(self, request, pk):
         card = get_object_or_404(Card, pk=pk)

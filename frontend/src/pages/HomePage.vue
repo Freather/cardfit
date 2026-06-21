@@ -70,8 +70,14 @@
             class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between"
           >
             <div>
-              <div class="w-full h-40 bg-gray-100 rounded-xl flex items-center justify-center text-xs text-gray-400 mb-5 relative">
-                카드 이미지
+              <div class="w-full h-40 bg-gray-100 rounded-xl mb-5 relative overflow-hidden flex items-center justify-center">
+                <img
+                  v-if="card.image_url"
+                  :src="card.image_url"
+                  :alt="card.name"
+                  class="h-full w-full object-contain p-2"
+                />
+                <span v-else class="text-xs text-gray-400">카드 이미지</span>
                 <span v-if="card.rank" class="absolute top-3 left-3 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-md">
                   추천 {{ card.rank }}위
                 </span>
@@ -81,9 +87,12 @@
               <p class="text-xs text-gray-400 mb-6">{{ card.desc }}</p>
             </div>
 
-            <button class="w-full py-2.5 rounded-xl font-medium text-sm bg-white text-blue-600 border border-blue-600 hover:bg-blue-50 transition">
+            <RouterLink
+              :to="{ name: 'card-detail', params: { id: card.id } }"
+              class="w-full py-2.5 rounded-xl font-medium text-sm bg-white text-blue-600 border border-blue-600 hover:bg-blue-50 transition text-center block"
+            >
               자세히 보기
-            </button>
+            </RouterLink>
           </div>
         </div>
       </div>
@@ -94,15 +103,17 @@
 
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useSpendingStore } from '../stores/spendingStore'
 import { spendingService } from '../services/spendingService'
 import { aiService } from '../services/aiService'
+import { useCardStore } from '../stores/cardStore'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const spendingStore = useSpendingStore()
+const cardStore = useCardStore()
 const isLoggedIn = computed(() => authStore.isAuthenticated)
 const username = computed(() => authStore.user?.username || authStore.user?.email || '사용자')
 const hasSurvey = computed(() => !!spendingStore.latestSurvey)
@@ -119,11 +130,22 @@ const categoryLabels = {
   other: '기타',
 }
 
-const defaultCards = [
-  { id: 1, name: '삼성 iD ON 카드', desc: '쇼핑·주유·통신 특화', benefit: '₩12,000', annual: '연간 약 ₩144,000' },
-  { id: 2, name: '삼성 taptap O 카드', desc: '외식·배달 특화', benefit: '₩9,500', annual: '연간 약 ₩114,000' },
-  { id: 3, name: '삼성 momo 카드', desc: '교통·편의점 특화', benefit: '₩7,200', annual: '연간 약 ₩86,400' },
-]
+const DEFAULT_CARD_IDS = [10, 1, 5]
+
+function buildDefaultCards(storeCards) {
+  return DEFAULT_CARD_IDS.map((id) => {
+    const c = storeCards.find((s) => s.id === id)
+    if (!c) return null
+    return {
+      id: c.id,
+      name: c.card_name,
+      desc: c.benefits?.[0] ? `${categoryLabels[c.benefits[0].benefit_category] || '생활'} 특화` : '생활 특화',
+      benefit: '',
+      annual: `연회비 ${c.annual_fee ? c.annual_fee.toLocaleString() + '원' : '무료'}`,
+      image_url: c.image_url || '',
+    }
+  }).filter(Boolean)
+}
 
 const loadRecommendations = async (surveyId) => {
   try {
@@ -133,20 +155,29 @@ const loadRecommendations = async (surveyId) => {
     recommendations.value = data.recommendations || []
 
     if (recommendations.value.length) {
-      cards.value = recommendations.value.map((item) => ({
-        id: item.card_id,
-        name: item.card_name,
-        desc: item.reason,
-        benefit: item.expected_monthly_benefit,
-        annual: item.tip,
-        rank: item.rank || 0,
-      }))
+      cards.value = recommendations.value.map((item) => {
+        const cardInfo = cardStore.cards.find((c) => c.id === item.card_id)
+        return {
+          id: item.card_id,
+          name: item.card_name,
+          desc: item.reason,
+          benefit: item.expected_monthly_benefit,
+          annual: item.tip,
+          rank: item.rank || 0,
+          image_url: cardInfo?.image_url || '',
+        }
+      })
     } else {
-      cards.value = defaultCards
+      cards.value = buildDefaultCards(cardStore.cards)
     }
   } catch (error) {
     recommendations.value = []
-    cards.value = defaultCards
+    if (cardStore.cards.length) {
+      cards.value = buildDefaultCards(cardStore.cards)
+    } else {
+      await cardStore.fetchCards()
+      cards.value = buildDefaultCards(cardStore.cards)
+    }
   }
 }
 
@@ -186,7 +217,8 @@ const loadSavedSurvey = async () => {
 }
 
 onMounted(async () => {
-  cards.value = defaultCards
+  await cardStore.fetchCards()
+  cards.value = buildDefaultCards(cardStore.cards)
 
   if (isLoggedIn.value) {
     if (!authStore.user) {
@@ -212,7 +244,7 @@ watch(isLoggedIn, async (value) => {
     }
   } else {
     spendingReport.value = null
-    cards.value = defaultCards
+    cards.value = buildDefaultCards(cardStore.cards)
     recommendations.value = []
   }
 })

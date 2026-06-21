@@ -18,6 +18,7 @@ class CardBenefitSerializer(serializers.ModelSerializer):
 class CardListSerializer(serializers.ModelSerializer):
     card_type_display = serializers.CharField(source='get_card_type_display', read_only=True)
     benefit_count = serializers.IntegerField(source='benefits.count', read_only=True)
+    benefits = CardBenefitSerializer(many=True, read_only=True)
 
     class Meta:
         model = Card
@@ -25,7 +26,7 @@ class CardListSerializer(serializers.ModelSerializer):
             'id', 'card_company', 'card_name',
             'card_type', 'card_type_display',
             'annual_fee', 'min_prev_month_spending',
-            'apply_url', 'benefit_count', 'synced_at',
+            'apply_url', 'image_url', 'benefit_count', 'benefits', 'synced_at',
         )
 
 
@@ -39,5 +40,5 @@ class CardDetailSerializer(serializers.ModelSerializer):
             'id', 'card_company', 'card_name',
             'card_type', 'card_type_display',
             'annual_fee', 'min_prev_month_spending',
-            'apply_url', 'benefits', 'synced_at',
+            'apply_url', 'image_url', 'benefits', 'synced_at',
         )

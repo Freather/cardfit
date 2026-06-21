@@ -1,10 +1,17 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { cardData } from '../data/cardData'
 import { getBenefitCategoryLabel } from '../data/benefitData'
 import { calculateMonthlyBenefit } from '../utils/calculateBenefit'
+import { useCardStore } from '../stores/cardStore'
+
+const cardStore = useCardStore()
+
+const failedImages = ref(new Set())
+function onImageError(cardId) {
+  failedImages.value = new Set([...failedImages.value, cardId])
+}
 
 const searchKeyword = ref('')
 const selectedBenefits = ref([])
@@ -48,10 +55,14 @@ const prevSpendingFilters = [
 ]
 
 const cards = computed(() => {
-  return cardData.map((card) => ({
+  return cardStore.cards.map((card) => ({
     ...card,
     estimatedBenefit: Math.round(calculateMonthlyBenefit(card, sampleSpending)),
   }))
+})
+
+onMounted(() => {
+  cardStore.fetchCards()
 })
 
 const filteredCards = computed(() => {
@@ -274,10 +285,21 @@ function toggleBenefit(value) {
               class="rounded-xl bg-white p-6 shadow-lg shadow-zinc-200/90"
             >
               <div class="flex gap-6">
-                <div
-                  class="flex h-28 w-32 shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 text-xs text-zinc-400"
-                >
-                  카드
+                <div class="flex h-28 w-32 shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 overflow-hidden">
+                  <img
+                    v-if="card.image_url && !failedImages.has(card.id)"
+                    :src="card.image_url"
+                    :alt="card.card_name"
+                    class="h-full w-full object-contain p-2"
+                    @error="onImageError(card.id)"
+                  />
+                  <div
+                    v-else
+                    class="flex h-full w-full items-end rounded-lg p-3"
+                    style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #3b82f6 100%)"
+                  >
+                    <span class="text-[10px] font-bold leading-tight text-white/90">{{ card.card_name }}</span>
+                  </div>
                 </div>
 
                 <div class="min-w-0 flex-1">

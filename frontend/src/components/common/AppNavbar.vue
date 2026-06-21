@@ -13,14 +13,22 @@
       </nav>
 
       <!-- 우측 -->
-      <div>
-        <RouterLink
-          v-if="isLoggedIn"
-          to="/profile"
-          class="bg-blue-700 px-5 py-2 rounded-full text-sm hover:bg-blue-600 transition"
-        >
-          마이페이지
-        </RouterLink>
+      <div class="flex items-center gap-3">
+        <template v-if="isLoggedIn">
+          <RouterLink
+            to="/profile"
+            class="bg-blue-700 px-5 py-2 rounded-full text-sm hover:bg-blue-600 transition"
+          >
+            마이페이지
+          </RouterLink>
+          <button
+            type="button"
+            class="px-5 py-2 rounded-full text-sm text-blue-200 hover:text-white hover:bg-blue-700 transition"
+            @click="handleLogout"
+          >
+            로그아웃
+          </button>
+        </template>
         <RouterLink
           v-else
           to="/login"
@@ -35,9 +43,15 @@
 
 <script setup>
 import { computed } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/authStore'
 
 const authStore = useAuthStore()
+const router = useRouter()
 const isLoggedIn = computed(() => authStore.isAuthenticated)
+
+async function handleLogout() {
+  await authStore.logout()
+  router.push({ name: 'login' })
+}
 </script>

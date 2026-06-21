@@ -54,7 +54,6 @@ export const useCardStore = defineStore('cards', () => {
       return cards.value
     } catch (err) {
       error.value = err
-      cards.value = [...cardData]
       return cards.value
     } finally {
       isLoading.value = false

@@ -1,10 +1,10 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { cardData } from '../data/cardData'
 import { getBenefitCategoryLabel } from '../data/benefitData'
 import { useCompareStore } from '../stores/compareStore'
+import { useCardStore } from '../stores/cardStore'
 
 const props = defineProps({
   id: {
@@ -14,44 +14,32 @@ const props = defineProps({
 })
 
 const compareStore = useCompareStore()
+const cardStore = useCardStore()
 
-const card = computed(() => {
-  return cardData.find((item) => String(item.id) === String(props.id)) || cardData[1] || cardData[0]
+const card = computed(() => cardStore.selectedCard || {})
+
+const imageError = ref(false)
+watch(() => card.value?.id, () => { imageError.value = false })
+
+onMounted(() => {
+  if (props.id) cardStore.fetchCardDetail(props.id)
+})
+
+watch(() => props.id, (id) => {
+  if (id) cardStore.fetchCardDetail(id)
 })
 
 const detailBenefits = computed(() => {
   const baseBenefits = card.value?.benefits || []
-  const mappedBenefits = baseBenefits.map((benefit) => ({
+  return baseBenefits.map((benefit, index) => ({
     id: benefit.id,
-    title: `${getBenefitCategoryLabel(benefit.benefit_category)} 할인`,
-    rate: `${Number(benefit.discount_rate)}% 할인`,
+    title: `${getBenefitCategoryLabel(benefit.benefit_category)} 혜택`,
+    rate: `${Number(benefit.discount_rate)}% ${benefit.benefit_type === 'cashback' ? '캐시백' : benefit.benefit_type === 'point' ? '적립' : benefit.benefit_type === 'mileage' ? '마일리지' : '할인'}`,
     description: benefit.condition_description || '주요 생활 영역 혜택',
     limit: benefit.monthly_limit ? `최대 ${formatWon(benefit.monthly_limit)}원` : '제한 없음',
     condition: formatPrevSpending(card.value.min_prev_month_spending),
-    tone: 'light',
+    tone: index === baseBenefits.length - 1 && baseBenefits.length >= 3 ? 'blue' : 'light',
   }))
-
-  return [
-    ...mappedBenefits,
-    {
-      id: 'digital',
-      title: '디지털 구독',
-      rate: '50% 할인',
-      description: '넷플릭스, 유튜브 프리미엄, 웨이브',
-      limit: '5,000원',
-      condition: '전월 실적 30만원 이상',
-      tone: 'light',
-    },
-    {
-      id: 'online',
-      title: '온라인 쇼핑 / 간편 결제',
-      rate: '1.5% 적립',
-      description: '네이버페이, 카카오페이, 쿠팡, 마켓컬리 등 온라인 가맹점 자동 적립',
-      limit: '무제한',
-      condition: '실적 조건 충족 시',
-      tone: 'blue',
-    },
-  ].slice(0, 4)
 })
 
 const conditionRows = [
@@ -90,7 +78,13 @@ function handleAddCompare() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#faf9f8] text-zinc-950">
+  <div v-if="cardStore.isLoading" class="min-h-screen flex items-center justify-center text-zinc-500">
+    카드 정보를 불러오는 중...
+  </div>
+  <div v-else-if="!card.id" class="min-h-screen flex items-center justify-center text-zinc-500">
+    카드를 찾을 수 없습니다.
+  </div>
+  <div v-else class="min-h-screen bg-[#faf9f8] text-zinc-950">
     <section class="border-b border-zinc-200 bg-[#fbfaf9]">
       <div class="relative mx-auto grid max-w-7xl gap-12 px-5 py-14 md:px-10 lg:grid-cols-[430px_1fr] lg:px-20">
         <RouterLink
@@ -101,18 +95,22 @@ function handleAddCompare() {
         </RouterLink>
 
         <div class="flex justify-center lg:justify-start">
-          <div
-            class="relative h-[330px] w-[390px] rotate-[-6deg] overflow-hidden rounded-xl bg-[#061018] shadow-2xl shadow-zinc-300"
-          >
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,#1d5260_0%,#07151b_45%,#030609_100%)]" />
-            <div class="absolute left-16 top-28 h-24 w-56 -rotate-[-10deg] rounded-xl bg-gradient-to-br from-cyan-300 via-slate-700 to-slate-950 shadow-xl">
-              <div class="ml-6 mt-10 h-4 w-7 rounded bg-yellow-300" />
-              <p class="ml-6 mt-3 text-[10px] tracking-[0.25em] text-white">1234 5678 9012 3456</p>
+          <div class="relative h-[330px] w-[390px] rotate-[-6deg] overflow-hidden rounded-xl shadow-2xl shadow-zinc-300 bg-zinc-100 flex items-center justify-center">
+            <img
+              v-if="card.image_url && !imageError"
+              :src="card.image_url"
+              :alt="card.card_name"
+              class="h-full w-full object-contain p-4"
+              @error="imageError = true"
+            />
+            <div
+              v-else
+              class="flex h-full w-full flex-col items-start justify-end p-8"
+              style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #3b82f6 100%)"
+            >
+              <p class="text-xs font-semibold uppercase tracking-widest text-white/60">Samsung Card</p>
+              <p class="mt-2 text-lg font-bold leading-tight text-white">{{ card.card_name }}</p>
             </div>
-            <div class="absolute bottom-10 left-12 text-xs font-bold uppercase tracking-[0.18em] text-cyan-100">
-              Midnight<br />Blues Card
-            </div>
-            <div class="absolute bottom-20 left-24 h-1 w-48 rounded-full bg-cyan-300 blur-sm" />
           </div>
         </div>
 

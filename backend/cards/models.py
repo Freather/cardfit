@@ -14,6 +14,7 @@ class Card(models.Model):
     annual_fee = models.PositiveIntegerField(default=0, verbose_name='연회비(원)')
     min_prev_month_spending = models.PositiveIntegerField(default=0, verbose_name='전월 실적 기준(원)')
     apply_url = models.URLField(blank=True, verbose_name='신청 URL')
+    image_url = models.URLField(blank=True, verbose_name='카드 이미지 URL')
     synced_at = models.DateTimeField(auto_now=True, verbose_name='동기화 시각')
 
     class Meta:
