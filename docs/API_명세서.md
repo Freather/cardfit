@@ -301,6 +301,7 @@ Authorization: Bearer <access_token>
       "min_prev_month_spending": 300000,
       "apply_url": "https://www.samsungcard.com",
       "benefit_count": 3,
+      "is_wished": false,
       "synced_at": "2026-06-01T00:00:00Z"
     }
   ]
@@ -326,6 +327,7 @@ Authorization: Bearer <access_token>
   "annual_fee": 0,
   "min_prev_month_spending": 300000,
   "apply_url": "https://www.samsungcard.com",
+  "is_wished": false,
   "synced_at": "2026-06-01T00:00:00Z",
   "benefits": [
     {
@@ -359,12 +361,73 @@ Authorization: Bearer <access_token>
 
 ---
 
+### 2-4. 카드 찜 목록 조회
+
+**GET** `/api/cards/wishlist/`  
+인증 필요
+
+**Response** `200 OK`
+
+```json
+{
+  "count": 1,
+  "results": [
+    {
+      "id": 1,
+      "card": {
+        "id": 3,
+        "card_company": "삼성카드",
+        "card_name": "삼성 iD ON 카드",
+        "is_wished": true
+      },
+      "source": "detail",
+      "created_at": "2026-06-22T07:16:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### 2-5. 카드 찜 추가
+
+**POST** `/api/cards/wishlist/`  
+인증 필요
+
+**Request Body**
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| card_id | integer | ✅ | 찜할 카드 ID |
+| source | string | | `search` / `detail` / `recommendation` / `compare` |
+
+```json
+{
+  "card_id": 3,
+  "source": "detail"
+}
+```
+
+**Response** `201 Created`
+
+---
+
+### 2-6. 카드 찜 삭제
+
+**DELETE** `/api/cards/wishlist/{card_id}/`  
+인증 필요
+
+**Response** `204 No Content`
+
+---
+
 #### 카드 카테고리 코드표
 
 | 코드 | 의미 |
 |------|------|
 | `food` | 식비 |
 | `transport` | 교통 |
+| `fuel` | 주유 |
 | `shopping` | 쇼핑 |
 | `entertainment` | 여가/문화 |
 | `communication` | 통신 |
@@ -393,11 +456,13 @@ Authorization: Bearer <access_token>
     "input_type_display": "직접입력",
     "food_monthly": 300000,
     "transport_monthly": 80000,
+    "fuel_monthly": 100000,
     "shopping_monthly": 200000,
     "entertainment_monthly": 50000,
     "communication_monthly": 55000,
+    "health_monthly": 20000,
     "other_monthly": 30000,
-    "total_monthly": 715000,
+    "total_monthly": 835000,
     "age_group": "30s",
     "age_group_display": "30대",
     "max_annual_fee": 30000,
@@ -423,9 +488,11 @@ Authorization: Bearer <access_token>
 | input_type | string | | `manual` / `csv` / `api` (기본값: `manual`) |
 | food_monthly | integer | | 월 식비 (원) |
 | transport_monthly | integer | | 월 교통비 (원) |
+| fuel_monthly | integer | | 월 주유비 (원) |
 | shopping_monthly | integer | | 월 쇼핑비 (원) |
 | entertainment_monthly | integer | | 월 여가비 (원) |
 | communication_monthly | integer | | 월 통신비 (원) |
+| health_monthly | integer | | 월 의료/건강비 (원) |
 | other_monthly | integer | | 월 기타 지출 (원) |
 | age_group | string | ✅ | `20s` / `30s` / `40s` / `50s` / `60s` |
 | max_annual_fee | integer | ✅ | 최대 연회비 (원) |
@@ -436,9 +503,11 @@ Authorization: Bearer <access_token>
   "input_type": "manual",
   "food_monthly": 300000,
   "transport_monthly": 80000,
+  "fuel_monthly": 100000,
   "shopping_monthly": 200000,
   "entertainment_monthly": 50000,
   "communication_monthly": 55000,
+  "health_monthly": 20000,
   "other_monthly": 30000,
   "age_group": "30s",
   "max_annual_fee": 30000,
@@ -465,6 +534,8 @@ Authorization: Bearer <access_token>
   "input_type": "csv",
   "food_monthly": 250000,
   "transport_monthly": 95000,
+  "fuel_monthly": 0,
+  "health_monthly": 20000,
   ...
   "total_monthly": 695000,
   "transactions": [
@@ -592,7 +663,7 @@ Authorization: Bearer <access_token>
 | 필드 | 타입 | 필수 | 설명 |
 |------|------|------|------|
 | survey_id | integer | ✅ | 연결할 설문 ID |
-| category | string | ✅ | `food` / `transport` / `shopping` / `entertainment` / `communication` / `health` / `other` |
+| category | string | ✅ | `food` / `transport` / `fuel` / `shopping` / `entertainment` / `communication` / `health` / `other` |
 | merchant | string | ✅ | 가맹점명 |
 | amount | integer | ✅ | 금액 (원, 음수 불가) |
 | transaction_date | string | ✅ | 거래일 (`YYYY-MM-DD`) |
@@ -825,9 +896,11 @@ Authorization: Bearer <access_token>
 |------|------|------|------|
 | food_monthly | integer | | 월 식비 (원) |
 | transport_monthly | integer | | 월 교통비 (원) |
+| fuel_monthly | integer | | 월 주유비 (원) |
 | shopping_monthly | integer | | 월 쇼핑비 (원) |
 | entertainment_monthly | integer | | 월 여가비 (원) |
 | communication_monthly | integer | | 월 통신비 (원) |
+| health_monthly | integer | | 월 의료/건강비 (원) |
 | other_monthly | integer | | 월 기타 지출 (원) |
 | max_annual_fee | integer | | 최대 연회비 (기본값: 200,000원) |
 | top | integer | | 추천 카드 수 (기본값: 5, 최대 10) |

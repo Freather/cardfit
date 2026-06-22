@@ -29,9 +29,11 @@ class UserSurvey(models.Model):
     input_type = models.CharField(max_length=20, choices=INPUT_TYPE_CHOICES, default='manual')
     food_monthly = models.PositiveIntegerField(default=0, verbose_name='식비(원/월)')
     transport_monthly = models.PositiveIntegerField(default=0, verbose_name='교통비(원/월)')
+    fuel_monthly = models.PositiveIntegerField(default=0, verbose_name='주유비(원/월)')
     shopping_monthly = models.PositiveIntegerField(default=0, verbose_name='쇼핑비(원/월)')
     entertainment_monthly = models.PositiveIntegerField(default=0, verbose_name='여가비(원/월)')
     communication_monthly = models.PositiveIntegerField(default=0, verbose_name='통신비(원/월)')
+    health_monthly = models.PositiveIntegerField(default=0, verbose_name='의료/건강비(원/월)')
     other_monthly = models.PositiveIntegerField(default=0, verbose_name='기타(원/월)')
     age_group = models.CharField(max_length=10, choices=AGE_GROUP_CHOICES, verbose_name='연령대')
     max_annual_fee = models.PositiveIntegerField(default=0, verbose_name='최대 연회비(원)')
@@ -50,9 +52,11 @@ class UserSurvey(models.Model):
         return (
             self.food_monthly
             + self.transport_monthly
+            + self.fuel_monthly
             + self.shopping_monthly
             + self.entertainment_monthly
             + self.communication_monthly
+            + self.health_monthly
             + self.other_monthly
         )
 
@@ -64,6 +68,7 @@ class SpendingTransaction(models.Model):
     CATEGORY_CHOICES = [
         ('food', '식비'),
         ('transport', '교통'),
+        ('fuel', '주유'),
         ('shopping', '쇼핑'),
         ('entertainment', '여가'),
         ('communication', '통신'),

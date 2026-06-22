@@ -31,8 +31,8 @@ class UserSurveySerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'input_type', 'input_type_display',
-            'food_monthly', 'transport_monthly', 'shopping_monthly',
-            'entertainment_monthly', 'communication_monthly', 'other_monthly',
+            'food_monthly', 'transport_monthly', 'fuel_monthly', 'shopping_monthly',
+            'entertainment_monthly', 'communication_monthly', 'health_monthly', 'other_monthly',
             'total_monthly',
             'age_group', 'age_group_display',
             'max_annual_fee', 'income_level', 'income_level_display',

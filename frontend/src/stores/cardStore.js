@@ -7,6 +7,7 @@ import { cardService } from '../services/cardService'
 export const useCardStore = defineStore('cards', () => {
   const cards = ref([...cardData])
   const selectedCard = ref(null)
+  const wishlist = ref([])
   const isLoading = ref(false)
   const error = ref(null)
   const filters = ref({
@@ -77,6 +78,37 @@ export const useCardStore = defineStore('cards', () => {
     }
   }
 
+  async function fetchWishlist() {
+    const { data } = await cardService.fetchWishlist()
+    wishlist.value = data.results || data
+    return wishlist.value
+  }
+
+  async function addWishlist(cardId, source = 'detail') {
+    const { data } = await cardService.addWishlist(cardId, source)
+    if (!wishlist.value.some((wish) => wish.card?.id === data.card?.id)) {
+      wishlist.value = [data, ...wishlist.value]
+    }
+    if (selectedCard.value?.id === data.card?.id) {
+      selectedCard.value = { ...selectedCard.value, is_wished: true }
+    }
+    cards.value = cards.value.map((card) =>
+      card.id === data.card?.id ? { ...card, is_wished: true } : card,
+    )
+    return data
+  }
+
+  async function removeWishlist(cardId) {
+    await cardService.removeWishlist(cardId)
+    wishlist.value = wishlist.value.filter((wish) => String(wish.card?.id) !== String(cardId))
+    if (selectedCard.value?.id && String(selectedCard.value.id) === String(cardId)) {
+      selectedCard.value = { ...selectedCard.value, is_wished: false }
+    }
+    cards.value = cards.value.map((card) =>
+      String(card.id) === String(cardId) ? { ...card, is_wished: false } : card,
+    )
+  }
+
   function setFilters(nextFilters) {
     filters.value = { ...filters.value, ...nextFilters }
     pagination.value.page = 1
@@ -96,6 +128,7 @@ export const useCardStore = defineStore('cards', () => {
   return {
     cards,
     selectedCard,
+    wishlist,
     isLoading,
     error,
     filters,
@@ -103,6 +136,9 @@ export const useCardStore = defineStore('cards', () => {
     filteredCards,
     fetchCards,
     fetchCardDetail,
+    fetchWishlist,
+    addWishlist,
+    removeWishlist,
     setFilters,
     resetFilters,
   }

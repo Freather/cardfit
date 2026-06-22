@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -31,6 +32,7 @@ class CardBenefit(models.Model):
     BENEFIT_CATEGORY_CHOICES = [
         ('food', '식비'),
         ('transport', '교통'),
+        ('fuel', '주유'),
         ('shopping', '쇼핑'),
         ('entertainment', '여가/문화'),
         ('communication', '통신'),
@@ -59,3 +61,37 @@ class CardBenefit(models.Model):
 
     def __str__(self):
         return f'{self.card.card_name} - {self.get_benefit_category_display()} {self.discount_rate}%'
+
+
+class CardWishList(models.Model):
+    SOURCE_CHOICES = [
+        ('search', '검색'),
+        ('detail', '상세'),
+        ('recommendation', '추천'),
+        ('compare', '비교'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='card_wish_items',
+    )
+    card = models.ForeignKey(
+        Card,
+        on_delete=models.CASCADE,
+        related_name='wished_by',
+    )
+    source = models.CharField(max_length=50, choices=SOURCE_CHOICES, default='search')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'card_wish_list'
+        verbose_name = '찜 카드'
+        verbose_name_plural = '찜 카드 목록'
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'card'], name='unique_user_card_wish'),
+        ]
+
+    def __str__(self):
+        return f'{self.user.email} - {self.card.card_name}'

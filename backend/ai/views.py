@@ -49,9 +49,11 @@ class CardRecommendView(APIView):
             'based_on': {
                 'food_monthly': survey.food_monthly,
                 'transport_monthly': survey.transport_monthly,
+                'fuel_monthly': survey.fuel_monthly,
                 'shopping_monthly': survey.shopping_monthly,
                 'entertainment_monthly': survey.entertainment_monthly,
                 'communication_monthly': survey.communication_monthly,
+                'health_monthly': survey.health_monthly,
                 'other_monthly': survey.other_monthly,
                 'total_monthly': survey.total_monthly,
                 'max_annual_fee': survey.max_annual_fee,
@@ -70,14 +72,16 @@ class CardRecommendView(APIView):
         class TempSurvey:
             food_monthly = int(request.data.get('food_monthly', 0))
             transport_monthly = int(request.data.get('transport_monthly', 0))
+            fuel_monthly = int(request.data.get('fuel_monthly', 0))
             shopping_monthly = int(request.data.get('shopping_monthly', 0))
             entertainment_monthly = int(request.data.get('entertainment_monthly', 0))
             communication_monthly = int(request.data.get('communication_monthly', 0))
+            health_monthly = int(request.data.get('health_monthly', 0))
             other_monthly = int(request.data.get('other_monthly', 0))
             max_annual_fee = int(request.data.get('max_annual_fee', 200000))
             total_monthly = (
-                food_monthly + transport_monthly + shopping_monthly +
-                entertainment_monthly + communication_monthly + other_monthly
+                food_monthly + transport_monthly + fuel_monthly + shopping_monthly +
+                entertainment_monthly + communication_monthly + health_monthly + other_monthly
             )
 
         result = get_gms_recommendations(TempSurvey())

@@ -23,9 +23,11 @@ const sortOption = ref('popular')
 const sampleSpending = {
   food_monthly: 320000,
   transport_monthly: 90000,
+  fuel_monthly: 100000,
   shopping_monthly: 220000,
   entertainment_monthly: 70000,
   communication_monthly: 60000,
+  health_monthly: 20000,
   other_monthly: 50000,
 }
 

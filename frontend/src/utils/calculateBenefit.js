@@ -1,9 +1,11 @@
 const spendingKeyByCategory = {
   food: 'food_monthly',
   transport: 'transport_monthly',
+  fuel: 'fuel_monthly',
   shopping: 'shopping_monthly',
   entertainment: 'entertainment_monthly',
   communication: 'communication_monthly',
+  health: 'health_monthly',
   other: 'other_monthly',
 }
 

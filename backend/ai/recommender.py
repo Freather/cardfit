@@ -43,9 +43,11 @@ def _build_prompt(survey, cards_context: list[dict]) -> str:
     spending = {
         "식비": survey.food_monthly,
         "교통": survey.transport_monthly,
+        "주유": survey.fuel_monthly,
         "쇼핑": survey.shopping_monthly,
         "여가/문화": survey.entertainment_monthly,
         "통신": survey.communication_monthly,
+        "의료/건강": survey.health_monthly,
         "기타": survey.other_monthly,
     }
     total = sum(spending.values())

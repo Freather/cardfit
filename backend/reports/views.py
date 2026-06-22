@@ -23,9 +23,11 @@ class SpendingSummaryView(APIView):
             'categories': {
                 'food': survey.food_monthly,
                 'transport': survey.transport_monthly,
+                'fuel': survey.fuel_monthly,
                 'shopping': survey.shopping_monthly,
                 'entertainment': survey.entertainment_monthly,
                 'communication': survey.communication_monthly,
+                'health': survey.health_monthly,
                 'other': survey.other_monthly,
             },
             'total_monthly': survey.total_monthly,
