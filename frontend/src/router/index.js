@@ -5,6 +5,7 @@ import CardSearchPage from '../pages/CardSearchPage.vue'
 import CardDetailPage from '../pages/CardDetailPage.vue'
 import CardComparePage from '../pages/CardComparePage.vue'
 import SpendingReportPage from '../pages/SpendingReportPage.vue'
+import AiRecommendationPage from '../pages/AiRecommendationPage.vue'
 import ProfilePage from '../pages/ProfilePage.vue'
 import LoginPage from '../pages/LoginPage.vue'
 import SignupPage from '../pages/SignupPage.vue'
@@ -16,6 +17,7 @@ const routes = [
   { path: '/cards/:id', name: 'card-detail', component: CardDetailPage, props: true },
   { path: '/compare', name: 'compare', component: CardComparePage },
   { path: '/report', name: 'report', component: SpendingReportPage, meta: { requiresAuth: true } },
+  { path: '/ai-recommendations', name: 'ai-recommendations', component: AiRecommendationPage, meta: { requiresAuth: true } },
   { path: '/profile', name: 'profile', component: ProfilePage, meta: { requiresAuth: true } },
   { path: '/login', name: 'login', component: LoginPage },
   { path: '/signup', name: 'signup', component: SignupPage },

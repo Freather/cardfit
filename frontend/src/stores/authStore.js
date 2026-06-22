@@ -4,11 +4,23 @@ import { defineStore } from 'pinia'
 import { authService } from '../services/authService'
 import { clearTokens, getStoredTokens, saveTokens } from '../services/api'
 
+const MOCK_ACCESS_TOKEN = 'mock-dev-access-token'
+const MOCK_REFRESH_TOKEN = 'mock-dev-refresh-token'
+const MOCK_USER = {
+  id: 'mock-user',
+  email: 'demo@cardfit.local',
+  username: '데모 사용자',
+  selected_card_id: null,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const storedTokens = getStoredTokens()
-  const user = ref(null)
   const accessToken = ref(storedTokens.access)
   const refreshToken = ref(storedTokens.refresh)
+  const isMockSession = computed(() => import.meta.env.DEV && accessToken.value === MOCK_ACCESS_TOKEN)
+  const user = ref(import.meta.env.DEV && storedTokens.access === MOCK_ACCESS_TOKEN ? MOCK_USER : null)
   const isLoading = ref(false)
   const error = ref(null)
 
@@ -41,6 +53,20 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  function loginWithMock() {
+    if (!import.meta.env.DEV) return null
+
+    const payload = {
+      user: MOCK_USER,
+      tokens: {
+        access: MOCK_ACCESS_TOKEN,
+        refresh: MOCK_REFRESH_TOKEN,
+      },
+    }
+    setAuth(payload)
+    return payload
+  }
+
   async function register(payload) {
     isLoading.value = true
     error.value = null
@@ -59,6 +85,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchProfile() {
     if (!isAuthenticated.value) return null
+    if (isMockSession.value) {
+      user.value = MOCK_USER
+      return user.value
+    }
 
     const { data } = await authService.fetchProfile()
     user.value = data
@@ -73,7 +103,7 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken.value = null
     clearTokens()
 
-    if (tokenForLogout) {
+    if (tokenForLogout && tokenForLogout !== MOCK_REFRESH_TOKEN) {
       try {
         await authService.logout(tokenForLogout)
       } catch {
@@ -89,6 +119,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading,
     error,
     isAuthenticated,
+    loginWithMock,
     login,
     register,
     fetchProfile,

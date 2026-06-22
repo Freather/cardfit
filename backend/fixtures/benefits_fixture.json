@@ -1,0 +1,698 @@
+[
+  {
+    "model": "cards.CardBenefit",
+    "pk": 1,
+    "fields": {
+      "benefit_category": "shopping",
+      "benefit_type": "discount",
+      "discount_rate": 7.0,
+      "monthly_limit": 5000,
+      "condition_description": "쇼핑(오픈마켓/소셜커머스/트렌디숍) 7% 결제일할인 및 1% 빅포인트 적립. 쇼핑 할인한도 월 5,000원. 전월 일시불 및 할부 이용금액 30만원 이상 시 제공. 삼성카드 앱에서 매월 옵션 변경 가능.",
+      "card": 1
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 2,
+    "fields": {
+      "benefit_category": "food",
+      "benefit_type": "discount",
+      "discount_rate": 50.0,
+      "monthly_limit": 10000,
+      "condition_description": "커피 30% 또는 50% 결제일할인(스타벅스 50% 또는 커피전문점 30%). 커피 할인한도 월 10,000원. 전월 일시불 및 할부 이용금액 30만원 이상 시 제공. 트렌디숍/커피전문점/스타벅스는 오프라인 가두매장 결제건에 한함.",
+      "card": 1
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 3,
+    "fields": {
+      "benefit_category": "transportation",
+      "benefit_type": "discount",
+      "discount_rate": 10.0,
+      "monthly_limit": 5000,
+      "condition_description": "대중교통(버스/지하철, 후불교통기능 선택 시)·택시 10% 결제일할인(청구할인). 통합 할인한도 월 5,000원. 전월 일시불 및 할부 이용금액 30만원 이상 시 제공. 발급월+1개월까지는 전월 이용금액 관계없이 제공.",
+      "card": 1
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 4,
+    "fields": {
+      "benefit_category": "communication",
+      "benefit_type": "discount",
+      "discount_rate": 10.0,
+      "monthly_limit": 5000,
+      "condition_description": "SKT·KT·LG U+ 이동통신요금 자동납부 시 10% 결제일할인(청구할인). 할인한도 월 5,000원. 전월 일시불 및 할부 이용금액 30만원 이상 시 제공. 결합상품요금, 휴대전화 단말기 구매금액, 대리점 카드 결제건 제외.",
+      "card": 1
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 5,
+    "fields": {
+      "benefit_category": "leisure",
+      "benefit_type": "discount",
+      "discount_rate": 0.0,
+      "monthly_limit": 0,
+      "condition_description": "CGV·롯데시네마 영화 티켓 10,000원 이상 결제 시 5,000원 결제일할인(청구할인). 통합 일 1회, 월 2회, 연 12회 제공. 전월 일시불 및 할부 이용금액 30만원 이상 시 제공. 현장 결제 및 공식 홈페이지/앱 온라인 예매 시 제공(예매 대행 사이트 제외).",
+      "card": 1
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 6,
+    "fields": {
+      "benefit_category": "etc",
+      "benefit_type": "accumulate",
+      "discount_rate": 1.3,
+      "monthly_limit": 0,
+      "condition_description": "해외 가맹점 및 해외 직접구매 이용건 1.3% 빅포인트 적립. 전월 이용금액 관계없이 적립한도 없이 제공. 해외겸용카드에 한함. 빅포인트 유효기간 5년.",
+      "card": 1
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 21,
+    "fields": {
+      "benefit_category": "communication",
+      "benefit_type": "discount",
+      "discount_rate": 10.0,
+      "monthly_limit": 15000,
+      "condition_description": "SELECT 서비스 1(택1) - 옵션 선택 시 ①국내 가맹점 0.7% 할인 ②아파트 관리비/통신(이동통신·인터넷·유선통신) 10% 할인 ③교육(학원·인터넷강의·학습지) 10% 할인 중 1개 제공. 통신/교육 할인한도는 전월 이용금액 구간별 월 7,000원(40만원 이상)/10,000원(80만원 이상)/15,000원(120만원 이상). 매월 옵션 변경 가능.",
+      "card": 2
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 22,
+    "fields": {
+      "benefit_category": "food",
+      "benefit_type": "discount",
+      "discount_rate": 7.0,
+      "monthly_limit": 15000,
+      "condition_description": "SELECT 서비스 2(택1) - 옵션 선택 시 ①온라인쇼핑몰/의료/배달앱 7% 할인 ②음식점/편의점/할인점/주유 7% 할인 중 1개 제공. 할인한도는 전월 이용금액 구간별 월 7,000원(40만원 이상)/10,000원(80만원 이상)/15,000원(120만원 이상). 매월 옵션 변경 가능.",
+      "card": 2
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 23,
+    "fields": {
+      "benefit_category": "shopping",
+      "benefit_type": "discount",
+      "discount_rate": 5.0,
+      "monthly_limit": 5000,
+      "condition_description": "생활 편의 영역 5% 결제일할인 - 생활잡화(다이소)/공연(NOL 티켓)/서점(알라딘)/보틀숍(와인앤모어). 통합 할인한도 월 5,000원. 전월 이용금액 40만원 이상 시 제공.",
+      "card": 2
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 24,
+    "fields": {
+      "benefit_category": "leisure",
+      "benefit_type": "discount",
+      "discount_rate": 50.0,
+      "monthly_limit": 5000,
+      "condition_description": "디지털콘텐츠/멤버십 정기결제 시 50% 결제일할인 - 디지털콘텐츠(넷플릭스·디즈니+·유튜브 프리미엄·티빙)/멤버십(쿠팡 와우·네이버플러스). 통합 할인한도 월 5,000원. 전월 이용금액 40만원 이상 시 제공.",
+      "card": 2
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 25,
+    "fields": {
+      "benefit_category": "etc",
+      "benefit_type": "discount",
+      "discount_rate": 2.0,
+      "monthly_limit": 0,
+      "condition_description": "해외 가맹점 및 해외 직접구매 이용건 2% 결제일할인. 전월 이용금액 관계없이 할인한도 없이 제공. 해외겸용카드에 한함.",
+      "card": 2
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 41,
+    "fields": {
+      "benefit_category": "leisure",
+      "benefit_type": "accumulate",
+      "discount_rate": 0.0,
+      "monthly_limit": 0,
+      "condition_description": "국내외 가맹점 이용금액 1,000원당 스카이패스 1 마일리지 기본 적립. 결제금액을 1,000원으로 나눈 후 소수점 이하 반올림 적립. 해외겸용카드로 해외 이용 시에도 기본 적립 적용. 택시 이용 시에도 마일리지 적립.",
+      "card": 3
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 42,
+    "fields": {
+      "benefit_category": "leisure",
+      "benefit_type": "accumulate",
+      "discount_rate": 0.0,
+      "monthly_limit": 0,
+      "condition_description": "스카이패스 마일리지 추가 적립(택1) - 해외형(해외 가맹점/해외 직접구매) 또는 국내형(백화점/주유/커피/편의점/택시) 선택 시 해당 적립처에서 1,000원당 1 마일리지 추가 적립(기본 1+추가 1 = 1,000원당 총 2 마일리지). 통합 월 적립한도 2,000 마일리지. 매월 옵션 변경 가능.",
+      "card": 3
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 43,
+    "fields": {
+      "benefit_category": "etc",
+      "benefit_type": "discount",
+      "discount_rate": 0.0,
+      "monthly_limit": 0,
+      "condition_description": "아멕스 THE PLATINUM 등급 서비스 - 아멕스 프리미엄카드(PLATINUM) 회원에게 아멕스 제휴사가 제공하는 등급 서비스. 자세한 내용은 아멕스 PLATINUM 등급 서비스 안내장 참고.",
+      "card": 3
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 141,
+    "fields": {
+      "benefit_category": "shopping",
+      "benefit_type": "discount",
+      "discount_rate": 30.0,
+      "monthly_limit": 10000,
+      "condition_description": "옵션 서비스 1(Needs & Identity, 택1) - ①온라인패션(무신사·W컨셉·Nike.com·SSF)·오늘의집 30% 할인 ②스타벅스 50%·교보문고/스트리밍(넷플릭스·웨이브·티빙·왓챠·멜론·FLO) 30% 할인 중 1개 제공. 통합 할인한도 월 10,000원. 전월 이용금액 30만원 이상 시 제공. 매월 옵션 변경 가능.",
+      "card": 8
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 142,
+    "fields": {
+      "benefit_category": "shopping",
+      "benefit_type": "discount",
+      "discount_rate": 7.0,
+      "monthly_limit": 5000,
+      "condition_description": "옵션 서비스 2(My Shopping, 택1) - ①온라인쇼핑몰(쿠팡·티몬·위메프·SSG.COM·G마켓·옥션·11번가·삼성카드쇼핑) 7% ②편의점·다이소·올리브영 7% ③해외 7% 할인 중 1개 제공. 통합 할인한도 월 5,000원. 전월 이용금액 30만원 이상 시 제공. 매월 옵션 변경 가능.",
+      "card": 8
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 143,
+    "fields": {
+      "benefit_category": "communication",
+      "benefit_type": "discount",
+      "discount_rate": 10.0,
+      "monthly_limit": 5000,
+      "condition_description": "이동통신요금(SKT·KT·LG U+·알뜰폰)·아파트 관리비 정기결제 시 10% 결제일할인. 통합 할인한도 월 5,000원. 전월 이용금액 30만원 이상 시 제공. 결합상품요금, 단말기 구매금액, 대리점 카드 결제건 제외.",
+      "card": 8
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 144,
+    "fields": {
+      "benefit_category": "transportation",
+      "benefit_type": "discount",
+      "discount_rate": 10.0,
+      "monthly_limit": 5000,
+      "condition_description": "대중교통(버스·지하철)·택시 10% 결제일할인. 통합 할인한도 월 5,000원. 전월 이용금액 30만원 이상 시 제공. 대중교통은 오프라인 결제건에 한하며 시외·고속버스 제외.",
+      "card": 8
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 145,
+    "fields": {
+      "benefit_category": "food",
+      "benefit_type": "discount",
+      "discount_rate": 10.0,
+      "monthly_limit": 5000,
+      "condition_description": "배달앱(배달의민족·요기요·쿠팡이츠) 10% 결제일할인. 통합 할인한도 월 5,000원. 전월 이용금액 30만원 이상 시 제공. 공식 홈페이지/앱 결제건에 한하며 가맹점 직접 결제건 제외.",
+      "card": 8
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 161,
+    "fields": {
+      "benefit_category": "shopping",
+      "benefit_type": "accumulate",
+      "discount_rate": 10.0,
+      "monthly_limit": 40000,
+      "condition_description": "무신사(무신사·29CM·솔드아웃·무신사 스탠다드·무신사 엠프티) 온오프라인 이용 시 무신사머니리워드 적립. 전월 이용금액 30만원 이상 시 10% 적립(월 한도 40,000P), 30만원 미만 시 2% 적립(월 한도 20,000P). 온라인은 공식 홈페이지/앱 결제건, 오프라인은 국내 매장에 한함.",
+      "card": 9
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 162,
+    "fields": {
+      "benefit_category": "etc",
+      "benefit_type": "accumulate",
+      "discount_rate": 1.0,
+      "monthly_limit": 0,
+      "condition_description": "국내외 가맹점 1% 무신사머니리워드 기본 적립. 전월 이용금액 관계없이 적립한도 없이 제공. 무신사 가맹점은 제외(무신사 10%/2% 적립과 중복 불가). 해외는 해외겸용카드에 한함.",
+      "card": 9
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 61,
+    "fields": {
+      "benefit_category": "transportation",
+      "benefit_type": "discount",
+      "discount_rate": 10.0,
+      "monthly_limit": 15000,
+      "condition_description": "HD현대오일뱅크 주유(충전)소에서 주유 시 10% 결제일할인. 통합 월 할인한도는 전월 이용금액 구간별 15,000원(40만원 이상)/25,000원(80만원 이상)/35,000원(120만원 이상).",
+      "card": 4
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 62,
+    "fields": {
+      "benefit_category": "communication",
+      "benefit_type": "discount",
+      "discount_rate": 5.0,
+      "monthly_limit": 5000,
+      "condition_description": "통신요금(이동통신 SKT·KT·LG U+·알뜰폰, 인터넷·유선통신) 정기결제 시 5% 결제일할인. 통합 월 할인한도 5,000원. 전월 이용금액 40만원 이상 시 제공.",
+      "card": 4
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 63,
+    "fields": {
+      "benefit_category": "food",
+      "benefit_type": "discount",
+      "discount_rate": 5.0,
+      "monthly_limit": 5000,
+      "condition_description": "편의점(CU·GS25·세븐일레븐·이마트24) 5% 결제일할인. 통합 월 할인한도 5,000원. 전월 이용금액 40만원 이상 시 제공. 오프라인 결제건에 한함.",
+      "card": 4
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 64,
+    "fields": {
+      "benefit_category": "shopping",
+      "benefit_type": "discount",
+      "discount_rate": 5.0,
+      "monthly_limit": 5000,
+      "condition_description": "온라인쇼핑몰(쿠팡·네이버플러스 스토어·SSG.COM·롯데ON·G마켓·옥션·11번가·삼성카드쇼핑) 5% 결제일할인. 통합 월 할인한도 5,000원. 전월 이용금액 40만원 이상 시 제공.",
+      "card": 4
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 65,
+    "fields": {
+      "benefit_category": "transportation",
+      "benefit_type": "discount",
+      "discount_rate": 0.0,
+      "monthly_limit": 0,
+      "condition_description": "차량 점검 서비스(스피드메이트) - 엔진오일 교환 시 20,000원 현장할인(월 1회, 연 2회), 차량 안전점검 무료(연 1회), 타이어 펑크 수리 무료(연 1회), 타이어 위치 교환 무료(연 1회). 전월 이용금액 40만원 이상 시 제공. 수입차·1.4톤 이상 트럭 제외.",
+      "card": 4
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 81,
+    "fields": {
+      "benefit_category": "transportation",
+      "benefit_type": "discount",
+      "discount_rate": 10.0,
+      "monthly_limit": 15000,
+      "condition_description": "SK주유(충전)소에서 주유 시 10% 결제일할인. 통합 월 할인한도는 전월 이용금액 구간별 15,000원(40만원 이상)/25,000원(80만원 이상)/35,000원(120만원 이상). LPG충전소는 SK가스 포함.",
+      "card": 5
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 82,
+    "fields": {
+      "benefit_category": "communication",
+      "benefit_type": "discount",
+      "discount_rate": 5.0,
+      "monthly_limit": 5000,
+      "condition_description": "통신요금(이동통신 SKT·KT·LG U+·알뜰폰, 인터넷·유선통신) 정기결제 시 5% 결제일할인. 통합 월 할인한도 5,000원. 전월 이용금액 40만원 이상 시 제공.",
+      "card": 5
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 83,
+    "fields": {
+      "benefit_category": "food",
+      "benefit_type": "discount",
+      "discount_rate": 5.0,
+      "monthly_limit": 5000,
+      "condition_description": "편의점(CU·GS25·세븐일레븐·이마트24) 5% 결제일할인. 통합 월 할인한도 5,000원. 전월 이용금액 40만원 이상 시 제공. 오프라인 결제건에 한함.",
+      "card": 5
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 84,
+    "fields": {
+      "benefit_category": "shopping",
+      "benefit_type": "discount",
+      "discount_rate": 5.0,
+      "monthly_limit": 5000,
+      "condition_description": "온라인쇼핑몰(쿠팡·네이버플러스 스토어·SSG.COM·롯데ON·G마켓·옥션·11번가·삼성카드쇼핑) 5% 결제일할인. 통합 월 할인한도 5,000원. 전월 이용금액 40만원 이상 시 제공.",
+      "card": 5
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 85,
+    "fields": {
+      "benefit_category": "transportation",
+      "benefit_type": "discount",
+      "discount_rate": 0.0,
+      "monthly_limit": 0,
+      "condition_description": "차량 점검 서비스(스피드메이트) - 엔진오일 교환 시 20,000원 현장할인(월 1회, 연 2회), 차량 안전점검 무료(연 1회), 타이어 펑크 수리 무료(연 1회), 타이어 위치 교환 무료(연 1회). 전월 이용금액 40만원 이상 시 제공.",
+      "card": 5
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 101,
+    "fields": {
+      "benefit_category": "transportation",
+      "benefit_type": "discount",
+      "discount_rate": 10.0,
+      "monthly_limit": 15000,
+      "condition_description": "S-OIL에서 주유 시 10% 결제일할인. 월 할인한도 전월 이용금액 구간별 15,000원(30만원 이상)/30,000원(70만원 이상). 일 1회, 1회당 주유금액 10만원까지 제공. LPG충전소 제외.",
+      "card": 6
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 102,
+    "fields": {
+      "benefit_category": "transportation",
+      "benefit_type": "accumulate",
+      "discount_rate": 0.0,
+      "monthly_limit": 0,
+      "condition_description": "S-OIL 포인트 적립 서비스. 적립 및 사용 관련 자세한 내용은 S-OIL 보너스카드 홈페이지(www.s-oilbonus.com), MY S-OIL 앱, S-OIL 고객센터에서 확인.",
+      "card": 6
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 103,
+    "fields": {
+      "benefit_category": "food",
+      "benefit_type": "discount",
+      "discount_rate": 30.0,
+      "monthly_limit": 5000,
+      "condition_description": "스타벅스 드라이브 스루 매장에서 My DT Pass를 통해 결제 시 30% 결제일할인. 월 할인한도 5,000원. 전월 이용금액 30만원 이상 시 제공. 스타벅스 앱 My DT Pass에 카드 등록 필요(차량 소유주와 카드 명의자 동일 시에 한함).",
+      "card": 6
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 104,
+    "fields": {
+      "benefit_category": "transportation",
+      "benefit_type": "discount",
+      "discount_rate": 10.0,
+      "monthly_limit": 5000,
+      "condition_description": "고속도로 통행료 10% 결제일할인. 월 할인한도 5,000원. 전월 이용금액 30만원 이상 시 제공. 후불교통기능 및 삼성후불하이패스카드 이용건에 한함.",
+      "card": 6
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 105,
+    "fields": {
+      "benefit_category": "transportation",
+      "benefit_type": "discount",
+      "discount_rate": 10.0,
+      "monthly_limit": 5000,
+      "condition_description": "주차장(케이엠파크)/대리운전(카카오 T 대리) 10% 결제일할인. 통합 월 할인한도 5,000원. 전월 이용금액 30만원 이상 시 제공. 대리운전은 공식 앱을 통한 결제건에 한함.",
+      "card": 6
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 121,
+    "fields": {
+      "benefit_category": "transportation",
+      "benefit_type": "discount",
+      "discount_rate": 10.0,
+      "monthly_limit": 15000,
+      "condition_description": "GS칼텍스 주유(충전)소에서 주유 시 10% 결제일할인. 통합 월 할인한도는 전월 이용금액 구간별 15,000원(40만원 이상)/25,000원(80만원 이상)/35,000원(120만원 이상). (STATION 카드 공통 구조 기준)",
+      "card": 7
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 122,
+    "fields": {
+      "benefit_category": "communication",
+      "benefit_type": "discount",
+      "discount_rate": 5.0,
+      "monthly_limit": 5000,
+      "condition_description": "통신요금(이동통신 SKT·KT·LG U+·알뜰폰, 인터넷·유선통신) 정기결제 시 5% 결제일할인. 통합 월 할인한도 5,000원. 전월 이용금액 40만원 이상 시 제공.",
+      "card": 7
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 123,
+    "fields": {
+      "benefit_category": "food",
+      "benefit_type": "discount",
+      "discount_rate": 5.0,
+      "monthly_limit": 5000,
+      "condition_description": "편의점(CU·GS25·세븐일레븐·이마트24) 5% 결제일할인. 통합 월 할인한도 5,000원. 전월 이용금액 40만원 이상 시 제공. 오프라인 결제건에 한함.",
+      "card": 7
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 124,
+    "fields": {
+      "benefit_category": "shopping",
+      "benefit_type": "discount",
+      "discount_rate": 5.0,
+      "monthly_limit": 5000,
+      "condition_description": "온라인쇼핑몰(쿠팡·네이버플러스 스토어·SSG.COM·롯데ON·G마켓·옥션·11번가·삼성카드쇼핑) 5% 결제일할인. 통합 월 할인한도 5,000원. 전월 이용금액 40만원 이상 시 제공.",
+      "card": 7
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 125,
+    "fields": {
+      "benefit_category": "transportation",
+      "benefit_type": "discount",
+      "discount_rate": 0.0,
+      "monthly_limit": 0,
+      "condition_description": "차량 점검 서비스(스피드메이트) - 엔진오일 교환 시 20,000원 현장할인(월 1회, 연 2회), 차량 안전점검 무료(연 1회), 타이어 펑크 수리 무료(연 1회), 타이어 위치 교환 무료(연 1회). 전월 이용금액 40만원 이상 시 제공.",
+      "card": 7
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 181,
+    "fields": {
+      "benefit_category": "etc",
+      "benefit_type": "discount",
+      "discount_rate": 1.2,
+      "monthly_limit": 0,
+      "condition_description": "해외 수수료 결제일할인 - 브랜드사수수료(1.0%) 및 해외이용수수료(0.2%) 할인. 전월 이용금액 관계없이 할인한도 없이 제공. 해외겸용카드에 한함.",
+      "card": 10
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 182,
+    "fields": {
+      "benefit_category": "etc",
+      "benefit_type": "discount",
+      "discount_rate": 2.0,
+      "monthly_limit": 0,
+      "condition_description": "해외 가맹점 및 해외 직접구매 이용건 2% 결제일할인. 전월 이용금액 관계없이 제공(통합 월 할인 적용 기준 30만원). 해외겸용카드에 한함.",
+      "card": 10
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 183,
+    "fields": {
+      "benefit_category": "etc",
+      "benefit_type": "discount",
+      "discount_rate": 5.0,
+      "monthly_limit": 10000,
+      "condition_description": "해외 오프라인 가맹점에서 삼성페이로 결제 시 5% 결제일할인. 월 할인한도 전월 이용금액 구간별 10,000원(50만원 이상)/20,000원(100만원 이상). 삼성페이 앱 간편결제건(스마트폰 NFC)에 한함. 한도 초과 시 해외 2% 할인 적용.",
+      "card": 10
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 184,
+    "fields": {
+      "benefit_category": "leisure",
+      "benefit_type": "discount",
+      "discount_rate": 0.0,
+      "monthly_limit": 0,
+      "condition_description": "공항 라운지 서비스(The Lounge) - 국내외 공항 라운지 본인 이용 무료. 통합 월 1회, 연 2회 제공. 전월 이용금액 50만원 이상 시 제공. The Lounge 앱에 카드 등록 후 이용권 다운로드.",
+      "card": 10
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 185,
+    "fields": {
+      "benefit_category": "leisure",
+      "benefit_type": "discount",
+      "discount_rate": 50.0,
+      "monthly_limit": 10000,
+      "condition_description": "인앱결제(구글플레이·앱스토어)/디지털콘텐츠(넷플릭스·디즈니+·유튜브 프리미엄)/멤버십(쿠팡 로켓와우·네이버플러스) 정기결제 시 50% 결제일할인. 월 할인한도 전월 이용금액 구간별 10,000원(50만원 이상)/20,000원(100만원 이상). 국내 온라인 가맹점, 카드 등록 결제건에 한함(간편결제 제외).",
+      "card": 10
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 186,
+    "fields": {
+      "benefit_category": "etc",
+      "benefit_type": "discount",
+      "discount_rate": 1.0,
+      "monthly_limit": 0,
+      "condition_description": "일상필수영역 1% 결제일할인 - 온라인 간편결제(삼성/네이버/카카오페이), 항공, 여행사, 면세점(신라), 리셀쇼핑(크림·솔드아웃), 온라인쇼핑몰, 백화점, 홈쇼핑, 편의점, 커피전문점, 주유. 전월 이용금액 관계없이 할인한도 없이 제공.",
+      "card": 10
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 187,
+    "fields": {
+      "benefit_category": "etc",
+      "benefit_type": "discount",
+      "discount_rate": 0.5,
+      "monthly_limit": 0,
+      "condition_description": "국내 가맹점 0.5% 결제일할인. 전월 이용금액 관계없이 할인한도 없이 제공.",
+      "card": 10
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 201,
+    "fields": {
+      "benefit_category": "shopping",
+      "benefit_type": "discount",
+      "discount_rate": 0.0,
+      "monthly_limit": 0,
+      "condition_description": "프리미엄 영역 연간 최대 15만원 할인 기프트 - 할인 대상점(백화점·해외·항공·호텔/리조트·온라인쇼핑몰·골프·병원)에서 건별 50,000원 이상 결제 시 50,000원 결제일할인. 전년도 이용금액별 연 2회(600만원 이상)/3회(3,600만원 이상) 제공.",
+      "card": 11
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 202,
+    "fields": {
+      "benefit_category": "etc",
+      "benefit_type": "accumulate",
+      "discount_rate": 3.0,
+      "monthly_limit": 0,
+      "condition_description": "국내외 가맹점 1~3% 빅포인트 적립 - 해외 3%, 일상(음식점·편의점·커피·병원)/쇼핑(백화점·면세점·프리미엄아울렛·온라인패션몰)/여가(항공·공연) 1.5%, 그 외 가맹점 1%. 적립한도 없음. 전월 이용금액 50만원 이상 시 제공.",
+      "card": 11
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 203,
+    "fields": {
+      "benefit_category": "leisure",
+      "benefit_type": "discount",
+      "discount_rate": 0.0,
+      "monthly_limit": 0,
+      "condition_description": "공항 라운지 서비스(The Lounge) - 국내외 공항 라운지 본인 및 동반인 이용 무료. 통합 연 3회 제공(본인·동반인 이용건별 각 1회 산정). 전월 이용금액 50만원 이상 시 제공.",
+      "card": 11
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 204,
+    "fields": {
+      "benefit_category": "etc",
+      "benefit_type": "discount",
+      "discount_rate": 0.0,
+      "monthly_limit": 0,
+      "condition_description": "마스터 월드 서비스 - Mastercard 프리미엄카드(WORLD) 회원에게 제공되는 등급 서비스. 호텔·공항 발렛파킹 서비스, Dine with Mastercard 포함. 자세한 내용은 Mastercard WORLD 등급 서비스 안내장 참고.",
+      "card": 11
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 221,
+    "fields": {
+      "benefit_category": "etc",
+      "benefit_type": "accumulate",
+      "discount_rate": 5.0,
+      "monthly_limit": 30000,
+      "condition_description": "해외 가맹점 및 해외 직접구매 이용건 5% 멤버십리워즈 적립. 통합 월 적립한도 30,000P. 전월 이용금액 관계없이 제공. 1멤버십리워즈=1원.",
+      "card": 12
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 222,
+    "fields": {
+      "benefit_category": "food",
+      "benefit_type": "accumulate",
+      "discount_rate": 7.0,
+      "monthly_limit": 5000,
+      "condition_description": "편의점(CU·GS25·세븐일레븐·미니스톱·이마트24)·배달앱(배달의민족·요기요·쿠팡이츠) 7% 멤버십리워즈 적립. 통합 월 적립한도 5,000P(30만원 이상)/10,000P(60만원 이상)/15,000P(90만원 이상). 전월 이용금액 30만원 이상 시 제공.",
+      "card": 12
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 223,
+    "fields": {
+      "benefit_category": "food",
+      "benefit_type": "discount",
+      "discount_rate": 20.0,
+      "monthly_limit": 5000,
+      "condition_description": "스타벅스·이디야커피 20% 결제일할인(청구할인). 통합 월 할인한도 5,000원. 전월 이용금액 30만원 이상 시 제공. 스타벅스 사이렌오더 결제건 포함, 오프라인 일반 결제건에 한함.",
+      "card": 12
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 224,
+    "fields": {
+      "benefit_category": "shopping",
+      "benefit_type": "discount",
+      "discount_rate": 10.0,
+      "monthly_limit": 5000,
+      "condition_description": "온라인쇼핑몰(쿠팡·SSG.COM·롯데ON·G마켓·옥션·11번가·삼성카드쇼핑) 10% 결제일할인. 통합 월 할인한도 5,000원. 전월 이용금액 30만원 이상 시 제공.",
+      "card": 12
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 225,
+    "fields": {
+      "benefit_category": "transportation",
+      "benefit_type": "accumulate",
+      "discount_rate": 5.0,
+      "monthly_limit": 15000,
+      "condition_description": "대중교통(버스·지하철)·이동통신(SKT·KT·LG U+) 자동납부건 5% 멤버십리워즈 적립. 통합 월 적립한도 5,000P(30만원 이상)/10,000P(60만원 이상)/15,000P(90만원 이상). 전월 이용금액 30만원 이상 시 제공.",
+      "card": 12
+    }
+  },
+  {
+    "model": "cards.CardBenefit",
+    "pk": 226,
+    "fields": {
+      "benefit_category": "leisure",
+      "benefit_type": "discount",
+      "discount_rate": 20.0,
+      "monthly_limit": 5000,
+      "condition_description": "스트리밍(넷플릭스·웨이브·티빙·왓챠·멜론·FLO) 이용 건별 6,000원 이상 정기결제 시 20% 결제일할인(청구할인). 통합 월 할인한도 5,000원. 전월 이용금액 30만원 이상 시 제공. 발급월+1개월까지는 전월 이용금액 30만원 미만 시에도 혜택 제공. 무이자할부·삼성카드 할인 적용된 일시불 및 할부 이용금액·기프트/선불카드(포인트·사이버머니 등 전자지급수단 포함) 구매 및 충전·상품권 구매건 제외.",
+      "card": 12
+    }
+  }
+]

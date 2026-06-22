@@ -1,29 +1,33 @@
 <template>
-  <header class="bg-blue-800 text-white">
-    <div class="max-w-7xl mx-auto h-16 flex items-center justify-between px-8">
-      <!-- 로고 -->
-      <RouterLink to="/" class="text-2xl font-bold">CardFit</RouterLink>
+  <header class="sticky top-0 z-50 border-b border-[#dcdddd] bg-[#fbf9f8]/95 backdrop-blur">
+    <div class="mx-auto flex h-[72px] max-w-[1200px] items-center justify-between px-5 lg:px-8">
+      <div class="flex items-center gap-10">
+        <RouterLink to="/" class="text-2xl font-extrabold text-[#001278]">CardFit</RouterLink>
 
-      <!-- 메뉴 -->
-      <nav class="flex gap-10 text-sm">
-        <RouterLink to="/" class="hover:text-blue-200">홈</RouterLink>
-        <RouterLink to="/report" class="hover:text-blue-200" v-if="isLoggedIn">소비 분석</RouterLink>
-        <RouterLink to="/cards" class="hover:text-blue-200">카드 검색</RouterLink>
-        <RouterLink to="/compare" class="hover:text-blue-200">리포트</RouterLink>
-      </nav>
+        <nav class="hidden items-center gap-8 text-base md:flex">
+          <RouterLink
+            v-for="item in navItems"
+            :key="item.to"
+            :to="item.to"
+            class="border-b-2 pb-1 font-semibold transition"
+            :class="isActive(item.to) ? 'border-[#001278] text-[#001278]' : 'border-transparent text-[#5d5f5f] hover:text-[#001278]'"
+          >
+            {{ item.label }}
+          </RouterLink>
+        </nav>
+      </div>
 
-      <!-- 우측 -->
       <div class="flex items-center gap-3">
         <template v-if="isLoggedIn">
           <RouterLink
             to="/profile"
-            class="bg-blue-700 px-5 py-2 rounded-full text-sm hover:bg-blue-600 transition"
+            class="hidden rounded-lg px-4 py-2 text-sm font-semibold text-[#5d5f5f] transition hover:bg-[#f0eded] hover:text-[#001278] sm:inline-flex"
           >
             마이페이지
           </RouterLink>
           <button
             type="button"
-            class="px-5 py-2 rounded-full text-sm text-blue-200 hover:text-white hover:bg-blue-700 transition"
+            class="rounded-lg border border-[#001278] px-4 py-2 text-sm font-semibold text-[#001278] transition hover:bg-[#001278] hover:text-white"
             @click="handleLogout"
           >
             로그아웃
@@ -32,7 +36,7 @@
         <RouterLink
           v-else
           to="/login"
-          class="bg-blue-700 px-5 py-2 rounded-full text-sm hover:bg-blue-600 transition"
+          class="rounded-lg bg-[#001278] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1428a0]"
         >
           로그인
         </RouterLink>
@@ -43,12 +47,30 @@
 
 <script setup>
 import { computed } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/authStore'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 const isLoggedIn = computed(() => authStore.isAuthenticated)
+
+const navItems = computed(() => [
+  { label: '추천 홈', to: '/' },
+  ...(isLoggedIn.value
+    ? [
+        { label: '소비 리포트', to: '/report' },
+        { label: 'AI 카드 추천', to: '/ai-recommendations' },
+      ]
+    : []),
+  { label: '카드 검색', to: '/cards' },
+  { label: '카드 비교', to: '/compare' },
+])
+
+function isActive(path) {
+  if (path === '/') return route.path === '/'
+  return route.path.startsWith(path)
+}
 
 async function handleLogout() {
   await authStore.logout()
