@@ -130,12 +130,8 @@ const categoryLabels = {
   other: '기타',
 }
 
-const DEFAULT_CARD_IDS = [10, 1, 5]
-
 function buildDefaultCards(storeCards) {
-  return DEFAULT_CARD_IDS.map((id) => {
-    const c = storeCards.find((s) => s.id === id)
-    if (!c) return null
+  return storeCards.map((c) => {
     return {
       id: c.id,
       name: c.card_name,
@@ -144,7 +140,7 @@ function buildDefaultCards(storeCards) {
       annual: `연회비 ${c.annual_fee ? c.annual_fee.toLocaleString() + '원' : '무료'}`,
       image_url: c.image_url || '',
     }
-  }).filter(Boolean)
+  })
 }
 
 const loadRecommendations = async (surveyId) => {
