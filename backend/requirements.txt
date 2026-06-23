@@ -20,7 +20,10 @@ debugpy==1.8.20
 decorator==5.2.1
 defusedxml==0.7.1
 Django==5.2.4
+django-cors-headers==4.9.0
 django-extensions==4.1
+djangorestframework==3.17.1
+djangorestframework_simplejwt==5.5.1
 executing==2.2.0
 fastjsonschema==2.21.2
 fonttools==4.61.1
@@ -91,6 +94,7 @@ pyasn1==0.6.3
 pyasn1_modules==0.4.2
 pycparser==3.0
 Pygments==2.19.2
+PyJWT==2.13.0
 PyMuPDF==1.27.2.3
 pyparsing==3.3.2
 PySocks==1.7.1
