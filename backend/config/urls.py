@@ -11,4 +11,5 @@ urlpatterns = [
     path('api/transactions/', include('surveys.urls_transactions')),
     path('api/reports/', include('reports.urls')),
     path('api/ai/', include('ai.urls')),
+    path('api/community/', include('community.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

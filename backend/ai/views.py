@@ -5,7 +5,8 @@ from rest_framework import status
 from django.conf import settings
 
 from surveys.models import UserSurvey
-from .recommender import get_gms_recommendations
+from cards.models import Card
+from .recommender import get_gms_recommendations, get_card_reason
 
 
 class CardRecommendView(APIView):
@@ -44,6 +45,33 @@ class CardRecommendView(APIView):
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 
+        recommendations = result.get('recommendations', [])
+        top = request.query_params.get('top')
+        if top:
+            try:
+                recommendations = recommendations[:int(top)]
+            except ValueError:
+                pass
+
+        card_map = {
+            c.id: c for c in Card.objects.filter(id__in=[r['card_id'] for r in recommendations])
+        }
+        enriched = []
+        for rec in recommendations:
+            card = card_map.get(rec.get('card_id'))
+            enriched.append({
+                'card_id': rec.get('card_id'),
+                'card_name': rec.get('card_name'),
+                'card_company': card.card_company if card else '',
+                'annual_fee': card.annual_fee if card else 0,
+                'apply_url': card.apply_url if card else '',
+                'rank': rec.get('rank'),
+                'reason': rec.get('reason', ''),
+                'expected_monthly_benefit': rec.get('expected_monthly_benefit', ''),
+                'net_benefit': rec.get('net_benefit', ''),
+                'benefit_details': rec.get('benefit_details', ''),
+            })
+
         return Response({
             'survey_id': survey.id,
             'based_on': {
@@ -58,7 +86,8 @@ class CardRecommendView(APIView):
                 'total_monthly': survey.total_monthly,
                 'max_annual_fee': survey.max_annual_fee,
             },
-            **result,
+            'recommendations': enriched,
+            'spending_insight': result.get('spending_insight', ''),
         })
 
     def post(self, request):
@@ -93,3 +122,47 @@ class CardRecommendView(APIView):
             )
 
         return Response(result)
+
+
+class CardReasonView(APIView):
+    """특정 카드에 대한 AI 추천 사유 반환"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, card_id):
+        try:
+            card = Card.objects.prefetch_related('benefits').get(pk=card_id)
+        except Card.DoesNotExist:
+            return Response({'detail': '카드를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if not settings.GMS_API_KEY:
+            return Response(
+                {'detail': 'GMS_API_KEY가 설정되지 않았습니다.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        survey_id = request.query_params.get('survey_id')
+        if survey_id:
+            survey = UserSurvey.objects.filter(pk=survey_id, user=request.user).first()
+        else:
+            survey = UserSurvey.objects.filter(user=request.user).first()
+
+        if not survey:
+            return Response(
+                {'detail': '지출 데이터가 없습니다. 먼저 설문을 완료하거나 CSV를 업로드해 주세요.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        result = get_card_reason(card, survey)
+
+        if 'error' in result and result['error']:
+            return Response(
+                {'detail': f'AI 오류: {result["error"]}'},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        return Response({
+            'card_id': card.id,
+            'card_name': card.card_name,
+            'card_company': card.card_company,
+            **result,
+        })

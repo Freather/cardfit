@@ -118,6 +118,20 @@ class SpendingCSVUploadView(APIView):
         )
 
 
+class SpendingStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        surveys = UserSurvey.objects.filter(user=request.user)
+        latest = surveys.first()
+        has_csv = surveys.filter(input_type='csv').exists()
+        return Response({
+            'has_survey': surveys.exists(),
+            'has_csv': has_csv,
+            'latest_survey_id': latest.id if latest else None,
+        })
+
+
 # ─── /api/transactions/ ────────────────────────────────────────────────────────
 
 class TransactionListCreateView(APIView):

@@ -31,13 +31,14 @@ class Card(models.Model):
 class CardBenefit(models.Model):
     BENEFIT_CATEGORY_CHOICES = [
         ('food', '식비'),
-        ('transport', '교통'),
+        ('transportation', '교통'),
         ('fuel', '주유'),
         ('shopping', '쇼핑'),
         ('entertainment', '여가/문화'),
         ('communication', '통신'),
         ('travel', '여행'),
         ('health', '의료/건강'),
+        ('point', '포인트'),
         ('other', '기타'),
     ]
     BENEFIT_TYPE_CHOICES = [

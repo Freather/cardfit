@@ -75,12 +75,70 @@ def _build_prompt(survey, cards_context: list[dict]) -> str:
       "card_name": "<카드명>",
       "rank": 1,
       "reason": "<이 카드가 사용자에게 적합한 구체적인 이유 2~3문장>",
-      "expected_monthly_benefit": "<예상 월 혜택 금액 또는 설명>",
-      "tip": "<이 카드를 최대한 활용하는 팁 1문장>"
+      "expected_monthly_benefit": "<예상 월 혜택 금액(숫자, 원 단위)>",
+      "net_benefit": "<연회비 차감 후 연간 순혜택 금액(숫자, 원 단위)>",
+      "benefit_details": "<주요 혜택 항목 요약 1~2문장>"
     }}
   ],
   "spending_insight": "<사용자 소비 패턴에 대한 전반적인 AI 분석 2~3문장>"
 }}"""
+
+
+def get_card_reason(card, survey) -> dict:
+    spending = {
+        "식비": survey.food_monthly,
+        "교통": survey.transport_monthly,
+        "주유": survey.fuel_monthly,
+        "쇼핑": survey.shopping_monthly,
+        "여가/문화": survey.entertainment_monthly,
+        "통신": survey.communication_monthly,
+        "의료/건강": survey.health_monthly,
+        "기타": survey.other_monthly,
+    }
+    total = sum(spending.values())
+    benefits_text = " / ".join([
+        f"{b.get_benefit_category_display()} {b.discount_rate}% {b.get_benefit_type_display()}"
+        + (f" (월{b.monthly_limit:,}원 한도)" if b.monthly_limit else "")
+        for b in card.benefits.all()
+    ])
+    prompt = f"""당신은 삼성카드 전문 AI 상담사입니다.
+사용자의 소비 패턴과 아래 카드의 혜택을 분석하여 이 카드가 사용자에게 적합한 이유를 설명해주세요.
+
+[사용자 월 소비 패턴]
+{json.dumps(spending, ensure_ascii=False, indent=2)}
+월 총 지출: {total:,}원
+
+[카드 정보]
+카드명: {card.card_name}
+카드사: {card.card_company}
+연회비: {card.annual_fee:,}원
+혜택: {benefits_text or '기본 캐시백'}
+
+[응답 형식 - 반드시 아래 JSON 형식으로만 응답하세요]
+{{
+  "reason": "<이 카드가 사용자에게 적합한 구체적인 이유 2~3문장>",
+  "expected_monthly_benefit": "<예상 월 혜택 금액 또는 설명>",
+  "tip": "<이 카드를 최대한 활용하는 팁 1문장>"
+}}"""
+
+    try:
+        client = _build_client()
+        response = client.chat.completions.create(
+            model=settings.GMS_MODEL,
+            messages=[
+                {"role": "system", "content": "당신은 삼성카드 AI 추천 서비스입니다. 반드시 요청된 JSON 형식으로만 응답하세요."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.7,
+        )
+        raw = response.choices[0].message.content.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        return json.loads(raw)
+    except Exception as e:
+        return {"error": str(e), "reason": "", "expected_monthly_benefit": "", "tip": ""}
 
 
 def get_gms_recommendations(survey) -> dict:
