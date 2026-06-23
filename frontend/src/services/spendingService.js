@@ -44,4 +44,32 @@ export const spendingService = {
   fetchCategoryBreakdown(params = {}) {
     return api.get('/api/reports/category-breakdown/', { params })
   },
+
+  fetchMonthlyTrend(params = {}) {
+    return api.get('/api/reports/monthly-trend/', { params })
+  },
+
+  fetchTopMerchants(params = {}) {
+    return api.get('/api/reports/top-merchants/', { params })
+  },
+
+  fetchTransactions(params = {}) {
+    return api.get('/api/transactions/', { params })
+  },
+
+  createTransaction(payload) {
+    return api.post('/api/transactions/', payload)
+  },
+
+  fetchTransactionDetail(id) {
+    return api.get(`/api/transactions/${id}/`)
+  },
+
+  updateTransaction(id, payload) {
+    return api.put(`/api/transactions/${id}/`, payload)
+  },
+
+  deleteTransaction(id) {
+    return api.delete(`/api/transactions/${id}/`)
+  },
 }

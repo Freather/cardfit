@@ -71,6 +71,7 @@ import { spendingCategories } from '../data/spendingCategoryData'
 import { aiService } from '../services/aiService'
 import { spendingService } from '../services/spendingService'
 import { useCardStore } from '../stores/cardStore'
+import { normalizeRecommendations } from '../utils/normalizeRecommendation'
 
 const { authStore, spendingStore, canUseAnalysis, missingRequirements } = useAnalysisAccess()
 const cardStore = useCardStore()
@@ -209,19 +210,21 @@ async function loadRecommendationData() {
       await cardStore.fetchCards()
     }
 
-    const params = spendingStore.latestSurvey?.id ? { survey_id: spendingStore.latestSurvey.id } : {}
+    const params = spendingStore.latestSurvey?.id
+      ? { survey_id: spendingStore.latestSurvey.id, top: 5 }
+      : { top: 5 }
     const [recommendationResponse, breakdownResponse] = await Promise.all([
       aiService.fetchRecommendations(params),
       spendingService.fetchCategoryBreakdown(params).catch(() => null),
     ])
 
     aiReport.value = recommendationResponse?.data || null
-    recommendations.value = aiReport.value?.recommendations || []
+    recommendations.value = normalizeRecommendations(aiReport.value?.recommendations || [])
     categoryBreakdown.value = breakdownResponse?.data?.breakdown || []
   } catch (error) {
     if (import.meta.env.DEV) {
       aiReport.value = mockAiReport
-      recommendations.value = mockAiRecommendations
+      recommendations.value = normalizeRecommendations(mockAiRecommendations)
       categoryBreakdown.value = mockAiReport.category_breakdown || []
       return
     }

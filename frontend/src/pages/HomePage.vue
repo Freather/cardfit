@@ -37,6 +37,7 @@ import { aiService } from '../services/aiService'
 import { spendingService } from '../services/spendingService'
 import { useCardStore } from '../stores/cardStore'
 import { useSpendingStore } from '../stores/spendingStore'
+import { normalizeRecommendations } from '../utils/normalizeRecommendation'
 
 const { authStore, isLoggedIn, displayName, ensureProfile } = useAuthState()
 const spendingStore = useSpendingStore()
@@ -105,10 +106,12 @@ async function loadRecommendations() {
   }
 
   try {
-    const params = spendingStore.latestSurvey?.id ? { survey_id: spendingStore.latestSurvey.id } : {}
+    const params = spendingStore.latestSurvey?.id
+      ? { survey_id: spendingStore.latestSurvey.id, top: 3 }
+      : { top: 3 }
     const response = await aiService.fetchRecommendations(params)
     const data = response?.data ?? {}
-    recommendations.value = data.recommendations || []
+    recommendations.value = normalizeRecommendations(data.recommendations || [])
 
     if (!recommendations.value.length) {
       cards.value = buildDefaultCards(cardStore.cards)
