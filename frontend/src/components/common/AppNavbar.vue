@@ -46,26 +46,21 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/authStore'
+import { useAuthState } from '../../composables/useAuthState'
 
-const authStore = useAuthStore()
+const { authStore, isLoggedIn } = useAuthState()
 const router = useRouter()
 const route = useRoute()
-const isLoggedIn = computed(() => authStore.isAuthenticated)
 
-const navItems = computed(() => [
+const navItems = [
   { label: '추천 홈', to: '/' },
-  ...(isLoggedIn.value
-    ? [
-        { label: '소비 리포트', to: '/report' },
-        { label: 'AI 카드 추천', to: '/ai-recommendations' },
-      ]
-    : []),
+  { label: '소비 리포트', to: '/report' },
+  { label: 'AI 카드 추천', to: '/ai-recommendations' },
   { label: '카드 검색', to: '/cards' },
   { label: '카드 비교', to: '/compare' },
-])
+  { label: '커뮤니티', to: '/community' },
+]
 
 function isActive(path) {
   if (path === '/') return route.path === '/'

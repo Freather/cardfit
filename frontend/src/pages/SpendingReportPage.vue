@@ -1,5 +1,17 @@
 <template>
-  <section class="min-h-screen bg-[#fbf9f8] px-4 py-8 md:px-10 lg:px-20">
+  <AnalysisRequirementNotice
+    v-if="!isCheckingAccess && !canUseAnalysis"
+    eyebrow="소비 리포트 준비 필요"
+    title="소비 리포트를 보려면 CSV 업로드와 소비 설문이 필요합니다."
+    :missing-requirements="missingRequirements"
+  />
+  <section
+    v-else-if="isCheckingAccess"
+    class="min-h-screen bg-[#fbf9f8] px-4 py-20 text-center text-sm font-bold text-gray-500 md:px-10 lg:px-20"
+  >
+    이용 가능 여부를 확인하는 중...
+  </section>
+  <section v-else class="min-h-screen bg-[#fbf9f8] px-4 py-8 md:px-10 lg:px-20">
     <div class="mx-auto max-w-7xl space-y-6">
       <header class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
@@ -17,156 +29,48 @@
         </div>
       </header>
 
-      <section class="grid gap-5 lg:grid-cols-[1.4fr_0.8fr]">
-        <div class="rounded-xl border border-[#e0e0e0] bg-white p-7 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
-          <div class="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-            <div>
-              <p class="text-sm font-semibold text-[#001278]">AI 분석 요약</p>
-              <h2 class="mt-2 text-2xl font-bold text-gray-950">생활 할인형 카드가 가장 유리합니다</h2>
-              <p class="mt-4 max-w-3xl text-sm leading-6 text-gray-600">{{ aiReport.summary }}</p>
-            </div>
-            <div class="rounded-2xl bg-[#001278] px-5 py-4 text-white">
-              <p class="text-xs text-blue-200">월 총 지출</p>
-              <p class="mt-1 text-2xl font-bold">{{ formatCurrency(totalCategoryAmount) }}</p>
-            </div>
-          </div>
+      <div class="grid gap-5 lg:grid-cols-[1.4fr_0.8fr]">
+        <AiReportBox
+          :summary="aiReport.summary"
+          :total-amount-label="formatCurrency(totalCategoryAmount)"
+          :top-category-label="topCategory.label"
+          :top-category-ratio="formatRatio(topCategory.ratio)"
+          :category-count="displayedCategoryBreakdown.length"
+        />
 
-          <div class="mt-8 grid gap-4 sm:grid-cols-3">
-            <div class="rounded-2xl bg-gray-50 p-5">
-              <p class="text-sm text-gray-500">가장 큰 지출</p>
-              <p class="mt-2 text-2xl font-bold text-gray-950">{{ topCategory.label }}</p>
-            </div>
-            <div class="rounded-2xl bg-gray-50 p-5">
-              <p class="text-sm text-gray-500">최대 비중</p>
-              <p class="mt-2 text-2xl font-bold text-gray-950">{{ formatRatio(topCategory.ratio) }}%</p>
-            </div>
-            <div class="rounded-2xl bg-gray-50 p-5">
-              <p class="text-sm text-gray-500">분석 카테고리</p>
-              <p class="mt-2 text-2xl font-bold text-gray-950">{{ displayedCategoryBreakdown.length }}개</p>
-            </div>
-          </div>
-        </div>
+        <SpendingProfileCard
+          :primary-spending-label="primarySpendingLabel"
+          :income-label="formatIncomeLevel(aiReport.survey.income_level)"
+          :age-label="formatAgeGroup(aiReport.survey.age_group)"
+        />
+      </div>
 
-        <div class="rounded-xl border border-[#e0e0e0] bg-white p-7 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
-          <p class="text-sm font-semibold text-gray-500">소비 성향</p>
-          <div class="mt-5 space-y-4">
-            <div class="flex items-center justify-between text-sm">
-              <span class="font-semibold text-gray-800">주요 소비</span>
-              <span class="text-[#001278]">{{ primarySpendingLabel }}</span>
-            </div>
-            <div class="flex items-center justify-between text-sm">
-              <span class="font-semibold text-gray-800">소득 구간</span>
-              <span class="text-gray-600">{{ formatIncomeLevel(aiReport.survey.income_level) }}</span>
-            </div>
-            <div class="flex items-center justify-between text-sm">
-              <span class="font-semibold text-gray-800">연령대</span>
-              <span class="text-gray-600">{{ formatAgeGroup(aiReport.survey.age_group) }}</span>
-            </div>
-            <div class="rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-              고정비보다 변동 지출 비중이 커서 영역별 할인 조건을 맞추기 좋은 패턴입니다.
-            </div>
-          </div>
-        </div>
-      </section>
+      <SpendingCategorySection
+        :categories="displayedCategoryBreakdown"
+        :chart-data="doughnutChartData"
+        :chart-options="doughnutChartOptions"
+        :total-amount-label="formatCurrency(totalCategoryAmount)"
+      />
 
-      <section class="rounded-xl border border-[#e0e0e0] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
-        <div class="grid lg:grid-cols-[0.82fr_1fr]">
-          <div class="p-8">
-            <div class="flex flex-col items-center gap-8">
-              <div class="relative h-80 w-80 max-w-full">
-                <div class="relative z-10 h-full w-full">
-                  <SpendingDoughnutChart
-                    :chart-data="doughnutChartData"
-                    :chart-options="doughnutChartOptions"
-                  />
-                </div>
-                <div class="pointer-events-none absolute left-1/2 top-1/2 z-0 flex h-36 w-36 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full bg-white text-center">
-                  <p class="text-sm text-gray-500">총 지출</p>
-                  <p class="mt-1 text-xl font-extrabold text-gray-950">{{ formatCurrency(totalCategoryAmount) }}</p>
-                </div>
-              </div>
-
-              <div class="grid w-full gap-3 sm:grid-cols-2">
-                <div
-                  v-for="category in displayedCategoryBreakdown"
-                  :key="category.category"
-                  class="flex items-center justify-between gap-3 rounded-lg bg-[#fbf9f8] px-4 py-3"
-                >
-                  <div class="flex min-w-0 items-center gap-2">
-                    <span
-                      class="h-3 w-3 shrink-0 rounded-full"
-                      :style="{ backgroundColor: category.color }"
-                    ></span>
-                    <span class="truncate text-sm font-semibold text-gray-800">{{ category.label }}</span>
-                  </div>
-                  <span class="shrink-0 text-sm font-bold text-gray-700">{{ formatRatio(category.ratio) }}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="p-8">
-            <div class="mb-6 flex items-start justify-between gap-4">
-              <div>
-                <h2 class="text-xl font-bold text-gray-950">카테고리 상세</h2>
-                <p class="mt-1 text-sm text-gray-500">지출 금액과 분석 코멘트를 확인하세요.</p>
-              </div>
-            </div>
-
-            <div class="space-y-4">
-              <article
-                v-for="category in displayedCategoryBreakdown"
-                :key="`detail-${category.category}`"
-                class="rounded-xl border border-[#e0e0e0] p-5"
-              >
-                <div class="flex items-start justify-between gap-4">
-                  <div class="flex items-center gap-3">
-                    <span
-                      class="h-4 w-4 rounded-full"
-                      :style="{ backgroundColor: category.color }"
-                    ></span>
-                    <div>
-                      <h3 class="font-bold text-gray-950">{{ category.label }}</h3>
-                      <p class="mt-1 text-sm text-gray-500">{{ category.insight }}</p>
-                    </div>
-                  </div>
-                  <div class="shrink-0 text-right">
-                    <p class="font-bold text-gray-950">{{ formatCurrency(category.total) }}</p>
-                    <p class="mt-1 text-sm text-gray-500">{{ formatRatio(category.ratio) }}%</p>
-                  </div>
-                </div>
-              </article>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="py-10 text-center">
-        <h2 class="text-xl font-bold text-gray-950">분석 결과를 바탕으로 최적의 카드를 확인해볼까요?</h2>
-        <p class="mt-2 text-sm text-gray-500">
-          CardFit AI가 고객님의 소비 패턴에 맞는 혜택을 실시간으로 계산했습니다.
-        </p>
-        <RouterLink
-          to="/ai-recommendations"
-          class="mt-6 inline-flex h-14 min-w-56 items-center justify-center rounded-full bg-[#001278] px-8 text-base font-bold text-white shadow-lg transition hover:bg-[#1428a0]"
-        >
-          추천 카드 보기
-        </RouterLink>
-      </section>
+      <ReportRecommendationCta />
     </div>
   </section>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useAuthStore } from '../stores/authStore'
-import { useSpendingStore } from '../stores/spendingStore'
-import SpendingDoughnutChart from '../components/report/SpendingDoughnutChart.vue'
+
+import AnalysisRequirementNotice from '../components/common/AnalysisRequirementNotice.vue'
+import AiReportBox from '../components/report/AiReportBox.vue'
+import ReportRecommendationCta from '../components/report/ReportRecommendationCta.vue'
+import SpendingCategorySection from '../components/report/SpendingCategorySection.vue'
+import SpendingProfileCard from '../components/report/SpendingProfileCard.vue'
+import { useAnalysisAccess } from '../composables/useAnalysisAccess'
 import { mockAiReport } from '../data/mockReportData'
 
-const authStore = useAuthStore()
-const spendingStore = useSpendingStore()
+const { authStore, spendingStore, canUseAnalysis, missingRequirements } = useAnalysisAccess()
 const aiReport = ref(mockAiReport)
+const isCheckingAccess = ref(true)
 const categoryColors = ['#001278', '#2563eb', '#7c3aed', '#db2777', '#f59e0b', '#10b981']
 
 const latestSurvey = computed(() => spendingStore.latestSurvey)
@@ -241,7 +145,7 @@ const doughnutChartOptions = computed(() => ({
 }))
 const isMockPreview = computed(() => import.meta.env.DEV && authStore.accessToken === 'mock-dev-access-token')
 
-const formatCurrency = (value) => {
+function formatCurrency(value) {
   return new Intl.NumberFormat('ko-KR', {
     style: 'currency',
     currency: 'KRW',
@@ -249,48 +153,35 @@ const formatCurrency = (value) => {
   }).format(value || 0)
 }
 
-const formatRatio = (value) => {
+function formatRatio(value) {
   return Number(value || 0).toLocaleString('ko-KR', {
     maximumFractionDigits: 1,
   })
 }
 
-const formatAgeGroup = (value) => {
-  switch (value) {
-    case '20s':
-      return '20대'
-    case '30s':
-      return '30대'
-    case '40s':
-      return '40대'
-    case '50s':
-      return '50대'
-    case '60s':
-      return '60대 이상'
-    default:
-      return '정보 없음'
+function formatAgeGroup(value) {
+  const ageGroupMap = {
+    '20s': '20대',
+    '30s': '30대',
+    '40s': '40대',
+    '50s': '50대',
+    '60s': '60대 이상',
   }
+
+  return ageGroupMap[value] || '정보 없음'
 }
 
-const formatIncomeLevel = (value) => {
-  switch (value) {
-    case 'low':
-      return '저소득'
-    case 'mid':
-      return '중간'
-    case 'high':
-      return '고소득'
-    default:
-      return '정보 없음'
+function formatIncomeLevel(value) {
+  const incomeLevelMap = {
+    low: '저소득',
+    mid: '중간',
+    high: '고소득',
   }
+
+  return incomeLevelMap[value] || '정보 없음'
 }
 
-const applyMockReport = () => {
-  aiReport.value = mockAiReport
-  spendingStore.latestSurvey = mockAiReport.survey
-}
-
-const loadSavedSurvey = async () => {
+async function loadSavedSurvey() {
   try {
     await spendingStore.fetchLatestSurvey()
     if (latestSurvey.value) {
@@ -301,17 +192,17 @@ const loadSavedSurvey = async () => {
       return
     }
   } catch {
-    // Fall through to mock data for backend-free development.
+    // Keep mock report for backend-free development.
   }
 
-  applyMockReport()
+  aiReport.value = mockAiReport
 }
 
 onMounted(async () => {
   if (authStore.isAuthenticated) {
     await loadSavedSurvey()
-  } else {
-    applyMockReport()
   }
+
+  isCheckingAccess.value = false
 })
 </script>
