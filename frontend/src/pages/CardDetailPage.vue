@@ -1,265 +1,34 @@
-<script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
-
-import { getBenefitCategoryLabel } from '../data/benefitData'
-import { useCompareStore } from '../stores/compareStore'
-import { useCardStore } from '../stores/cardStore'
-
-const props = defineProps({
-  id: {
-    type: [String, Number],
-    default: null,
-  },
-})
-
-const compareStore = useCompareStore()
-const cardStore = useCardStore()
-
-const card = computed(() => cardStore.selectedCard || {})
-
-const imageError = ref(false)
-watch(() => card.value?.id, () => { imageError.value = false })
-
-onMounted(() => {
-  if (props.id) cardStore.fetchCardDetail(props.id)
-})
-
-watch(() => props.id, (id) => {
-  if (id) cardStore.fetchCardDetail(id)
-})
-
-const detailBenefits = computed(() => {
-  const baseBenefits = card.value?.benefits || []
-  return baseBenefits.map((benefit, index) => ({
-    id: benefit.id,
-    title: `${getBenefitCategoryLabel(benefit.benefit_category)} 혜택`,
-    rate: `${Number(benefit.discount_rate)}% ${benefit.benefit_type === 'cashback' ? '캐시백' : benefit.benefit_type === 'point' ? '적립' : benefit.benefit_type === 'mileage' ? '마일리지' : '할인'}`,
-    description: benefit.condition_description || '주요 생활 영역 혜택',
-    limit: benefit.monthly_limit ? `최대 ${formatWon(benefit.monthly_limit)}원` : '제한 없음',
-    condition: formatPrevSpending(card.value.min_prev_month_spending),
-    tone: index === baseBenefits.length - 1 && baseBenefits.length >= 3 ? 'blue' : 'light',
-  }))
-})
-
-const conditionRows = [
-  {
-    label: '전월 실적 산정 기준',
-    value: '전월 1일부터 말일까지 이용한 일시불 및 할부 합계 금액. 단, 무이자할부 및 국세/지방세 등은 제외됩니다.',
-  },
-  {
-    label: '할인 적용 방식',
-    value: '결제 시 할인되는 방식이 아닌, 결제 후 결제일에 할인된 금액이 청구되는 청구할인 방식입니다.',
-  },
-  {
-    label: '해외 이용 수수료',
-    value: 'Mastercard/Visa 브랜드 수수료 1.0% + 삼성카드 서비스 수수료 0.2%가 합산 청구됩니다.',
-  },
-  {
-    label: '포인트 유효기간',
-    value: '적립일로부터 5년이며, 기간 경과 시 월 단위로 자동 소멸됩니다.',
-  },
-]
-
-const aiKeywords = ['배달 앱', '스트리밍 서비스', '생활비 결제']
-
-function formatWon(value) {
-  return new Intl.NumberFormat('ko-KR').format(Number(value || 0))
-}
-
-function formatPrevSpending(value) {
-  if (!value) return '조건 없음'
-  return `${Math.floor(value / 10000)}만원 이상`
-}
-
-function handleAddCompare() {
-  compareStore.addCard(card.value)
-}
-</script>
-
 <template>
-  <div v-if="cardStore.isLoading" class="min-h-screen flex items-center justify-center text-zinc-500">
+  <div v-if="cardStore.isLoading" class="flex min-h-screen items-center justify-center text-zinc-500">
     카드 정보를 불러오는 중...
   </div>
-  <div v-else-if="!card.id" class="min-h-screen flex items-center justify-center text-zinc-500">
+  <div v-else-if="!card.id" class="flex min-h-screen items-center justify-center text-zinc-500">
     카드를 찾을 수 없습니다.
   </div>
   <div v-else class="min-h-screen bg-[#faf9f8] text-zinc-950">
-    <section class="border-b border-zinc-200 bg-[#fbfaf9]">
-      <div class="relative mx-auto grid max-w-7xl gap-12 px-5 py-14 md:px-10 lg:grid-cols-[430px_1fr] lg:px-20">
-        <RouterLink
-          to="/cards"
-          class="absolute right-5 top-6 text-sm font-semibold text-zinc-500 transition hover:text-blue-800 md:right-10 lg:right-20"
-        >
-          목록으로
-        </RouterLink>
+    <CardDetailHeader
+      :card="card"
+      :is-wished="isWished"
+      :wishlist-loading="wishlistLoading"
+      :wishlist-message="wishlistMessage"
+      :wishlist-message-tone="wishlistMessageTone"
+      :compare-message="compareMessage"
+      :compare-message-tone="compareMessageTone"
+      @toggle-wishlist="handleToggleWishlist"
+      @add-compare="handleAddCompare"
+    />
 
-        <div class="flex justify-center lg:justify-start">
-          <div class="relative h-[330px] w-[390px] rotate-[-6deg] overflow-hidden rounded-xl shadow-2xl shadow-zinc-300 bg-zinc-100 flex items-center justify-center">
-            <img
-              v-if="card.image_url && !imageError"
-              :src="card.image_url"
-              :alt="card.card_name"
-              class="h-full w-full object-contain p-4"
-              @error="imageError = true"
-            />
-            <div
-              v-else
-              class="flex h-full w-full flex-col items-start justify-end p-8"
-              style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #3b82f6 100%)"
-            >
-              <p class="text-xs font-semibold uppercase tracking-widest text-white/60">Samsung Card</p>
-              <p class="mt-2 text-lg font-bold leading-tight text-white">{{ card.card_name }}</p>
-            </div>
-          </div>
-        </div>
+    <CardAiReason
+      v-if="authStore.isAuthenticated"
+      :keywords="aiKeywords"
+    />
 
-        <div class="flex flex-col justify-center">
-          <p class="text-xs font-semibold uppercase tracking-[0.32em] text-blue-900">Premium Choice</p>
-          <h1 class="mt-4 text-4xl font-extrabold tracking-tight text-black md:text-5xl">
-            {{ card.card_name }}
-          </h1>
-          <p class="mt-4 max-w-2xl text-sm leading-6 text-zinc-500">
-            사용자의 소비 패턴을 AI가 분석하여 가장 높은 혜택을 제공하는 맞춤형 프리미엄 카드입니다.
-          </p>
+    <CardBenefitList
+      :benefits="detailBenefits"
+      :min-prev-month-spending="Number(card.min_prev_month_spending || 0)"
+    />
 
-          <div class="mt-8 grid max-w-2xl grid-cols-3 border-y border-zinc-200 py-5">
-            <div>
-              <p class="text-sm text-zinc-500">연회비</p>
-              <p class="mt-1 font-bold text-blue-950">{{ formatWon(card.annual_fee) }}원</p>
-            </div>
-            <div>
-              <p class="text-sm text-zinc-500">기준 실적</p>
-              <p class="mt-1 font-bold text-blue-950">{{ formatPrevSpending(card.min_prev_month_spending) }}</p>
-            </div>
-            <div>
-              <p class="text-sm text-zinc-500">카드 종류</p>
-              <p class="mt-1 font-bold text-blue-950">{{ card.card_type_display }}</p>
-            </div>
-          </div>
-
-          <div class="mt-8 flex flex-wrap items-center gap-5">
-            <a
-              :href="card.apply_url"
-              target="_blank"
-              rel="noreferrer"
-              class="inline-flex h-12 items-center justify-center rounded-md bg-blue-950 px-9 text-sm font-bold text-white shadow-md transition hover:bg-blue-900"
-            >
-              공식 발급 신청
-            </a>
-            <button
-              type="button"
-              class="h-12 px-7 text-sm font-semibold text-zinc-500 transition hover:text-blue-800"
-              @click="handleAddCompare"
-            >
-              비교 추가
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="border-b border-zinc-200 bg-white/70 px-5 py-12 md:px-10 lg:px-20">
-      <div class="mx-auto max-w-7xl rounded-xl border border-blue-100 bg-white p-8 shadow-sm">
-        <div class="flex gap-6">
-          <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-2xl text-blue-900">
-            ✨
-          </div>
-          <div>
-            <h2 class="text-lg font-bold text-blue-950">AI 맞춤 추천 사유</h2>
-            <p class="mt-2 text-sm leading-6 text-zinc-600">
-              최근 3개월 소비 데이터를 분석한 결과,
-              <strong class="font-bold text-blue-950">{{ aiKeywords.join(', ') }}</strong>
-              영역의 지출 비중이 높게 나타났습니다. 이 카드는 해당 카테고리에서 혜택을 제공해
-              현재 사용 중인 카드 대비
-              <strong class="font-bold text-blue-950">월 평균 15,400원의 추가 혜택</strong>
-              을 받을 수 있습니다.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="mx-auto max-w-7xl px-5 py-16 md:px-10 lg:px-20">
-      <div class="mb-10 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <h2 class="text-3xl font-extrabold text-black">상세 혜택 안내</h2>
-        <p class="text-sm text-zinc-500">* 전월 이용금액 {{ formatPrevSpending(card.min_prev_month_spending) }} 시 제공</p>
-      </div>
-
-      <div class="grid gap-6 md:grid-cols-3">
-        <article
-          v-for="benefit in detailBenefits"
-          :key="benefit.id"
-          class="rounded-xl border p-8 shadow-sm"
-          :class="
-            benefit.tone === 'blue'
-              ? 'md:col-span-2 border-blue-950 bg-blue-900 text-white'
-              : 'border-zinc-200 bg-white text-zinc-950'
-          "
-        >
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <div
-                class="mb-5 flex h-10 w-10 items-center justify-center rounded-md"
-                :class="benefit.tone === 'blue' ? 'bg-white/10 text-blue-100' : 'bg-indigo-100 text-blue-950'"
-              >
-                {{ benefit.tone === 'blue' ? '🛍' : '▣' }}
-              </div>
-              <h3 class="text-lg font-bold">{{ benefit.title }}</h3>
-              <p
-                class="mt-2 text-sm"
-                :class="benefit.tone === 'blue' ? 'text-blue-100' : 'text-zinc-500'"
-              >
-                {{ benefit.description }}
-              </p>
-            </div>
-            <span
-              v-if="benefit.tone !== 'blue'"
-              class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-blue-900"
-            >
-              {{ benefit.rate.includes('%') ? benefit.rate.replace(' 할인', '% Discount').replace('%%', '%') : benefit.rate }}
-            </span>
-          </div>
-
-          <div
-            class="mt-10 grid gap-5 border-t pt-6"
-            :class="benefit.tone === 'blue' ? 'grid-cols-2 border-white/20' : 'grid-cols-2 border-zinc-200'"
-          >
-            <div>
-              <p :class="benefit.tone === 'blue' ? 'text-sm text-blue-100' : 'text-sm text-zinc-500'">월 한도</p>
-              <p class="mt-1 font-bold">{{ benefit.limit }}</p>
-            </div>
-            <div>
-              <p :class="benefit.tone === 'blue' ? 'text-sm text-blue-100' : 'text-sm text-zinc-500'">주요 조건</p>
-              <p class="mt-1 font-bold">{{ benefit.condition }}</p>
-            </div>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <section class="bg-[#f7f5f3] px-5 py-16 md:px-10 lg:px-20">
-      <div class="mx-auto max-w-7xl">
-        <h2 class="text-3xl font-extrabold text-black">유의사항 및 세부 조건</h2>
-
-        <div class="mt-10 overflow-hidden rounded-xl border border-zinc-200 bg-white">
-          <table class="w-full border-collapse text-left text-sm">
-            <thead class="bg-zinc-100 text-zinc-900">
-              <tr>
-                <th class="w-56 px-6 py-4 font-bold">구분</th>
-                <th class="px-6 py-4 font-bold">세부 내용</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in conditionRows" :key="row.label" class="border-t border-zinc-200">
-                <th class="bg-zinc-50 px-6 py-5 font-semibold text-zinc-700">{{ row.label }}</th>
-                <td class="px-6 py-5 leading-6 text-zinc-600">{{ row.value }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+    <CardConditionTable :rows="conditionRows" />
 
     <footer class="border-t border-zinc-200 bg-white px-5 py-12 text-sm text-zinc-500 md:px-10 lg:px-20">
       <div class="mx-auto max-w-7xl">
@@ -270,8 +39,249 @@ function handleAddCompare() {
           <a href="#" class="hover:text-blue-900">고객센터</a>
           <a href="#" class="hover:text-blue-900">공지사항</a>
         </div>
-        <p class="mt-6">© 2024 CardFit Financial Services. This is a mock service inspired by Samsung Card.</p>
+        <p class="mt-6">© 2024 CardFit Financial Services.</p>
       </div>
     </footer>
   </div>
 </template>
+
+<script setup>
+import { computed, onMounted, ref, watch } from 'vue'
+
+import CardAiReason from '../components/cards/CardAiReason.vue'
+import CardBenefitList from '../components/cards/CardBenefitList.vue'
+import CardConditionTable from '../components/cards/CardConditionTable.vue'
+import CardDetailHeader from '../components/cards/CardDetailHeader.vue'
+import { SURVEY_PREFERENCE_STORAGE_KEY } from '../composables/useAnalysisAccess'
+import { getBenefitCategoryLabel } from '../data/benefitData'
+import { useAuthStore } from '../stores/authStore'
+import { useCardStore } from '../stores/cardStore'
+import { useCompareStore } from '../stores/compareStore'
+
+const props = defineProps({
+  id: {
+    type: [String, Number],
+    default: null,
+  },
+})
+
+const compareStore = useCompareStore()
+const cardStore = useCardStore()
+const authStore = useAuthStore()
+
+const compareMessage = ref('')
+const compareMessageTone = ref('info')
+const wishlistMessage = ref('')
+const wishlistMessageTone = ref('info')
+const wishlistLoading = ref(false)
+
+const card = computed(() => cardStore.selectedCard || {})
+const isWished = computed(() => {
+  if (card.value?.is_wished) return true
+
+  return cardStore.wishlist.some((wish) => {
+    const wishCardId = wish.card?.id || wish.card || wish.card_id
+    return String(wishCardId) === String(card.value?.id)
+  })
+})
+
+const preferredBenefitCategories = computed(() => {
+  const savedPreferences = loadSavedSurveyPreferences()
+  const preferredCategories = getPreferredBenefitCategories(savedPreferences?.preferredBenefit)
+  const selectedCategories = Array.isArray(savedPreferences?.categories) ? savedPreferences.categories : []
+
+  return new Set([...preferredCategories, ...selectedCategories].map(normalizeBenefitCategory))
+})
+
+const detailBenefits = computed(() => {
+  const baseBenefits = card.value?.benefits || []
+  const hasPreferredMatch = baseBenefits.some((benefit) =>
+    preferredBenefitCategories.value.has(normalizeBenefitCategory(benefit.benefit_category)),
+  )
+
+  return baseBenefits.map((benefit) => {
+    const category = normalizeBenefitCategory(benefit.benefit_category)
+
+    return {
+      id: benefit.id,
+      title: `${getBenefitCategoryLabel(benefit.benefit_category)} 혜택`,
+      icon: getBenefitIconType(benefit.benefit_category),
+      category,
+      rate: formatBenefitRate(benefit),
+      description: benefit.condition_description || '주요 생활 영역 혜택',
+      limit: benefit.monthly_limit ? `최대 ${formatWon(benefit.monthly_limit)}원` : '제한 없음',
+      condition: formatPrevSpending(card.value.min_prev_month_spending),
+      tone: hasPreferredMatch && preferredBenefitCategories.value.has(category) ? 'blue' : 'light',
+    }
+  })
+})
+
+const conditionRows = [
+  {
+    label: '전월 실적 산정 기준',
+    value: '전월 1일부터 말일까지 이용한 일시불 및 할부 합계 금액을 기준으로 산정합니다. 무이자할부, 국세, 지방세 등 일부 금액은 제외될 수 있습니다.',
+  },
+  {
+    label: '할인 적용 방식',
+    value: '결제 시 즉시 할인되는 방식이 아닌, 카드사 청구 시점에 할인 금액이 반영되는 청구할인 방식일 수 있습니다.',
+  },
+  {
+    label: '해외 이용 수수료',
+    value: '해외 결제 시 국제 브랜드 수수료와 카드사 해외서비스 수수료가 합산 청구될 수 있습니다.',
+  },
+  {
+    label: '포인트 유효기간',
+    value: '적립 포인트는 카드사 정책에 따라 일정 기간 이후 소멸될 수 있으므로 상세 약관을 확인해주세요.',
+  },
+]
+
+const aiKeywords = ['배달 앱', '스트리밍 서비스', '생활비 결제']
+
+onMounted(() => {
+  if (props.id) cardStore.fetchCardDetail(props.id)
+})
+
+watch(
+  () => props.id,
+  (id) => {
+    if (id) cardStore.fetchCardDetail(id)
+  },
+)
+
+watch(
+  () => card.value?.id,
+  () => {
+    compareMessage.value = ''
+    wishlistMessage.value = ''
+  },
+)
+
+function handleAddCompare() {
+  if (!card.value?.id) return
+
+  const alreadyAdded = compareStore.compareCards.some(
+    (item) => String(item.id) === String(card.value.id),
+  )
+
+  if (alreadyAdded) {
+    compareMessage.value = '이미 카드 비교에 담겨 있습니다.'
+    compareMessageTone.value = 'info'
+    return
+  }
+
+  const added = compareStore.addCard(card.value)
+
+  if (!added) {
+    compareMessage.value = '카드 비교는 최대 3개까지만 담을 수 있습니다.'
+    compareMessageTone.value = 'error'
+    return
+  }
+
+  compareMessage.value = '카드 비교에 담았습니다.'
+  compareMessageTone.value = 'success'
+}
+
+async function handleToggleWishlist() {
+  if (!card.value?.id || wishlistLoading.value) return
+
+  if (!authStore.isAuthenticated) {
+    wishlistMessage.value = '로그인 후 찜할 수 있습니다.'
+    wishlistMessageTone.value = 'error'
+    return
+  }
+
+  wishlistLoading.value = true
+  wishlistMessage.value = ''
+
+  try {
+    if (isWished.value) {
+      await cardStore.removeWishlist(card.value.id)
+      wishlistMessage.value = '찜 목록에서 제거했습니다.'
+      wishlistMessageTone.value = 'info'
+      return
+    }
+
+    await cardStore.addWishlist(card.value.id, 'detail')
+    wishlistMessage.value = '찜 목록에 추가했습니다.'
+    wishlistMessageTone.value = 'success'
+  } catch (error) {
+    wishlistMessage.value = '찜 처리 중 문제가 발생했습니다.'
+    wishlistMessageTone.value = 'error'
+  } finally {
+    wishlistLoading.value = false
+  }
+}
+
+function formatWon(value) {
+  return new Intl.NumberFormat('ko-KR').format(Number(value || 0))
+}
+
+function formatPrevSpending(value) {
+  if (!value) return '조건 없음'
+  return `${Math.floor(Number(value) / 10000)}만원 이상`
+}
+
+function formatBenefitRate(benefit) {
+  const typeLabelMap = {
+    cashback: '캐시백',
+    point: '적립',
+    mileage: '마일리지',
+    discount: '할인',
+  }
+
+  return `${Number(benefit.discount_rate || 0)}% ${typeLabelMap[benefit.benefit_type] || '할인'}`
+}
+
+function getBenefitIconType(category) {
+  const normalizedCategory = normalizeBenefitCategory(category)
+  const iconTypes = {
+    food: 'food',
+    fuel: 'fuel',
+    transport: 'transport',
+    shopping: 'shopping',
+    communication: 'communication',
+    entertainment: 'entertainment',
+    travel: 'travel',
+    health: 'health',
+    other: 'other',
+  }
+
+  return iconTypes[normalizedCategory] || 'other'
+}
+
+function normalizeBenefitCategory(category) {
+  const categoryMap = {
+    leisure: 'entertainment',
+    culture: 'entertainment',
+    medical: 'health',
+    hospital: 'health',
+    etc: 'other',
+  }
+
+  return categoryMap[category] || category || 'other'
+}
+
+function getPreferredBenefitCategories(preferredBenefit) {
+  const preferredCategoryMap = {
+    '음식점, 카페 할인': ['food'],
+    '버스, 지하철, 택시': ['transport'],
+    '주유소 할인/적립': ['fuel'],
+    '온/오프라인 쇼핑': ['shopping'],
+    '통신요금 할인': ['communication'],
+    'OTT, 영화, 여행': ['entertainment', 'travel'],
+    '약국, 병원': ['health'],
+    '그 외 혜택': ['other'],
+  }
+
+  return preferredCategoryMap[preferredBenefit] || []
+}
+
+function loadSavedSurveyPreferences() {
+  try {
+    return JSON.parse(localStorage.getItem(SURVEY_PREFERENCE_STORAGE_KEY) || 'null')
+  } catch (error) {
+    localStorage.removeItem(SURVEY_PREFERENCE_STORAGE_KEY)
+    return null
+  }
+}
+</script>

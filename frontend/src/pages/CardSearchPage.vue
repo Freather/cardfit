@@ -1,24 +1,57 @@
-<script setup>
-import { computed, ref, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+<template>
+  <section class="min-h-screen bg-[#f4f4f5] px-5 py-10 md:px-10 lg:px-20">
+    <div class="mx-auto max-w-7xl">
+      <h1 class="text-3xl font-bold text-zinc-950">카드 검색</h1>
 
-import { getBenefitCategoryLabel } from '../data/benefitData'
+      <label
+        for="card-search"
+        class="mt-4 flex h-12 items-center rounded-lg border border-zinc-200 bg-white px-4 shadow-sm"
+      >
+        <svg class="h-4 w-4 text-zinc-400" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="m14 14 3 3" />
+          <circle cx="8.5" cy="8.5" r="5.5" />
+        </svg>
+        <input
+          id="card-search"
+          v-model="filters.searchKeyword"
+          type="search"
+          class="ml-3 h-full w-full bg-transparent text-sm text-zinc-800 outline-none placeholder:text-zinc-400"
+          placeholder="카드명 또는 혜택을 검색하세요"
+        />
+      </label>
+
+      <div class="mt-8 grid gap-6 lg:grid-cols-[250px_1fr]">
+        <CardFilterPanel
+          v-model:filters="filters"
+          :benefit-filters="benefitFilters"
+          :annual-fee-filters="annualFeeFilters"
+          :company-filters="companyFilters"
+          :prev-spending-filters="prevSpendingFilters"
+          @reset="resetFilters"
+        />
+
+        <CardList
+          v-model:sort-option="filters.sortOption"
+          :cards="filteredCards"
+          :failed-image-ids="failedImages"
+          @image-error="onImageError"
+        />
+      </div>
+    </div>
+  </section>
+</template>
+
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+
+import CardFilterPanel from '../components/cards/CardFilterPanel.vue'
+import CardList from '../components/cards/CardList.vue'
 import { calculateMonthlyBenefit } from '../utils/calculateBenefit'
 import { useCardStore } from '../stores/cardStore'
 
 const cardStore = useCardStore()
-
 const failedImages = ref(new Set())
-function onImageError(cardId) {
-  failedImages.value = new Set([...failedImages.value, cardId])
-}
-
-const searchKeyword = ref('')
-const selectedBenefits = ref([])
-const selectedAnnualFee = ref('')
-const selectedCompany = ref('samsung')
-const selectedPrevSpending = ref('')
-const sortOption = ref('popular')
+const filters = ref(createDefaultFilters())
 
 const sampleSpending = {
   food_monthly: 320000,
@@ -35,7 +68,23 @@ const benefitFilters = [
   { label: '주유', value: 'fuel' },
   { label: '통신', value: 'communication' },
   { label: '교통', value: 'transport' },
+  { label: '병원/건강', value: 'health' },
+  { label: '식사', value: 'food' },
+  { label: '쇼핑', value: 'shopping' },
+  { label: '문화/여가', value: 'entertainment' },
+  { label: '기타', value: 'other' },
 ]
+
+const benefitCategoryAliases = {
+  leisure: 'entertainment',
+  culture: 'entertainment',
+  travel: 'entertainment',
+  medical: 'health',
+  hospital: 'health',
+  dining: 'food',
+  meal: 'food',
+  etc: 'other',
+}
 
 const annualFeeFilters = [
   { label: '전체', value: '' },
@@ -45,10 +94,17 @@ const annualFeeFilters = [
 ]
 
 const companyFilters = [
+  { label: '전체', value: '' },
   { label: '삼성카드', value: 'samsung' },
   { label: '신한카드', value: 'shinhan' },
   { label: '국민카드', value: 'kb' },
 ]
+
+const companyFilterKeywords = {
+  samsung: ['samsung', '삼성'],
+  shinhan: ['shinhan', '신한'],
+  kb: ['kb', 'kookmin', '국민'],
+}
 
 const prevSpendingFilters = [
   { label: '전체', value: '' },
@@ -57,291 +113,137 @@ const prevSpendingFilters = [
 ]
 
 const cards = computed(() => {
-  return cardStore.cards.map((card) => ({
+  return (cardStore.cards || []).map((card) => ({
     ...card,
     estimatedBenefit: Math.round(calculateMonthlyBenefit(card, sampleSpending)),
   }))
+})
+
+const filteredCards = computed(() => {
+  const keyword = filters.value.searchKeyword.trim().toLowerCase()
+
+  const filtered = cards.value.filter((card) => {
+    return (
+      matchesKeyword(card, keyword) &&
+      matchesBenefit(card) &&
+      matchesAnnualFee(card) &&
+      matchesCompany(card) &&
+      matchesPrevSpending(card)
+    )
+  })
+
+  if (filters.value.sortOption === 'benefit') {
+    return [...filtered].sort((a, b) => b.estimatedBenefit - a.estimatedBenefit)
+  }
+
+  if (filters.value.sortOption === 'fee') {
+    return [...filtered].sort((a, b) => Number(a.annual_fee || 0) - Number(b.annual_fee || 0))
+  }
+
+  return filtered
 })
 
 onMounted(() => {
   cardStore.fetchCards()
 })
 
-const filteredCards = computed(() => {
-  const keyword = searchKeyword.value.trim().toLowerCase()
-
-  const filtered = cards.value.filter((card) => {
-    const matchesKeyword =
-      !keyword ||
-      card.card_name.toLowerCase().includes(keyword) ||
-      card.card_company.toLowerCase().includes(keyword)
-
-    const matchesBenefit =
-      selectedBenefits.value.length === 0 ||
-      card.benefits.some((benefit) => {
-        if (selectedBenefits.value.includes('fuel')) {
-          const matchesFuel =
-            benefit.benefit_category === 'fuel' || benefit.condition_description?.includes('주유')
-
-          if (matchesFuel) return true
-        }
-
-        return selectedBenefits.value.includes(benefit.benefit_category)
-      })
-
-    const matchesAnnualFee =
-      !selectedAnnualFee.value ||
-      (selectedAnnualFee.value === 'free' && card.annual_fee === 0) ||
-      (selectedAnnualFee.value === 'under10000' && card.annual_fee <= 10000) ||
-      (selectedAnnualFee.value === 'under50000' && card.annual_fee <= 50000)
-
-    const matchesCompany =
-      !selectedCompany.value ||
-      (selectedCompany.value === 'samsung' && card.card_company.includes('삼성'))
-
-    const matchesPrevSpending =
-      !selectedPrevSpending.value ||
-      (selectedPrevSpending.value === 'under300000' && card.min_prev_month_spending <= 300000) ||
-      (selectedPrevSpending.value === 'under500000' && card.min_prev_month_spending <= 500000)
-
-    return (
-      matchesKeyword &&
-      matchesBenefit &&
-      matchesAnnualFee &&
-      matchesCompany &&
-      matchesPrevSpending
-    )
-  })
-
-  if (sortOption.value === 'benefit') {
-    return [...filtered].sort((a, b) => b.estimatedBenefit - a.estimatedBenefit)
+function createDefaultFilters() {
+  return {
+    searchKeyword: '',
+    selectedBenefits: [],
+    selectedAnnualFee: '',
+    selectedCompany: '',
+    selectedPrevSpending: '',
+    sortOption: 'popular',
   }
-
-  if (sortOption.value === 'fee') {
-    return [...filtered].sort((a, b) => a.annual_fee - b.annual_fee)
-  }
-
-  return filtered
-})
-
-function formatWon(value) {
-  return new Intl.NumberFormat('ko-KR').format(value)
 }
 
-function getMainBenefit(card) {
-  const benefit = card.benefits[0]
-  if (!benefit) return '혜택'
-
-  return `${getBenefitCategoryLabel(benefit.benefit_category)} ${Number(benefit.discount_rate)}%`
-}
-
-function formatPrevSpending(value) {
-  if (!value) return '조건 없음'
-  return `전월실적 ${Math.floor(value / 10000)}만`
+function onImageError(cardId) {
+  failedImages.value = new Set([...failedImages.value, cardId])
 }
 
 function resetFilters() {
-  searchKeyword.value = ''
-  selectedBenefits.value = []
-  selectedAnnualFee.value = ''
-  selectedCompany.value = 'samsung'
-  selectedPrevSpending.value = ''
-  sortOption.value = 'popular'
+  filters.value = createDefaultFilters()
 }
 
-function toggleBenefit(value) {
-  if (selectedBenefits.value.includes(value)) {
-    selectedBenefits.value = selectedBenefits.value.filter((benefit) => benefit !== value)
-    return
+function matchesKeyword(card, keyword) {
+  if (!keyword) return true
+
+  const searchableText = [
+    card.card_name,
+    card.card_company,
+    ...(card.benefits || []).map((benefit) => benefit.condition_description),
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  return searchableText.includes(keyword)
+}
+
+function matchesBenefit(card) {
+  if (!filters.value.selectedBenefits.length) return true
+
+  return (card.benefits || []).some((benefit) => {
+    const category = normalizeBenefitCategory(benefit.benefit_category)
+    const description = String(benefit.condition_description || '')
+
+    if (filters.value.selectedBenefits.includes(category)) return true
+
+    return filters.value.selectedBenefits.some((selectedBenefit) =>
+      getBenefitDescriptionKeywords(selectedBenefit).some((keyword) =>
+        description.includes(keyword),
+      ),
+    )
+  })
+}
+
+function matchesAnnualFee(card) {
+  const selectedAnnualFee = filters.value.selectedAnnualFee
+
+  return (
+    !selectedAnnualFee ||
+    (selectedAnnualFee === 'free' && Number(card.annual_fee || 0) === 0) ||
+    (selectedAnnualFee === 'under10000' && Number(card.annual_fee || 0) <= 10000) ||
+    (selectedAnnualFee === 'under50000' && Number(card.annual_fee || 0) <= 50000)
+  )
+}
+
+function matchesCompany(card) {
+  const selectedCompany = filters.value.selectedCompany
+  const companyText = String(card.card_company || '').toLowerCase()
+  const companyKeywords = companyFilterKeywords[selectedCompany] || []
+
+  return !selectedCompany || companyKeywords.some((keyword) => companyText.includes(keyword))
+}
+
+function matchesPrevSpending(card) {
+  const selectedPrevSpending = filters.value.selectedPrevSpending
+  const spending = Number(card.min_prev_month_spending || 0)
+
+  return (
+    !selectedPrevSpending ||
+    (selectedPrevSpending === 'under300000' && spending <= 300000) ||
+    (selectedPrevSpending === 'under500000' && spending <= 500000)
+  )
+}
+
+function normalizeBenefitCategory(category) {
+  return benefitCategoryAliases[category] || category || 'other'
+}
+
+function getBenefitDescriptionKeywords(category) {
+  const keywordMap = {
+    fuel: ['주유', '충전소', 'LPG', 'S-OIL', 'GS칼텍스', 'SK에너지'],
+    communication: ['통신', '휴대폰', 'SKT', 'KT', 'LG U+', '인터넷'],
+    transport: ['교통', '버스', '지하철', '택시', '대중교통'],
+    health: ['병원', '약국', '의료', '건강'],
+    food: ['식사', '음식', '카페', '스타벅스', '배달', '외식', '편의점'],
+    shopping: ['쇼핑', '온라인쇼핑', '오프라인', '마트', '쿠팡', 'SSG', 'G마켓'],
+    entertainment: ['문화', '여가', 'OTT', '영화', '여행', '스트리밍', '넷플릭스'],
+    other: ['기타', '생활', '해외'],
   }
 
-  selectedBenefits.value = [...selectedBenefits.value, value]
+  return keywordMap[category] || []
 }
 </script>
-
-<template>
-  <section class="min-h-screen bg-[#f4f4f5] px-5 py-10 md:px-10 lg:px-20">
-    <div class="mx-auto max-w-7xl">
-      <h1 class="text-3xl font-bold text-zinc-950">카드 검색</h1>
-
-      <label
-        for="card-search"
-        class="mt-4 flex h-12 items-center rounded-lg border border-zinc-200 bg-white px-4 shadow-sm"
-      >
-        <span class="text-zinc-400">⌕</span>
-        <input
-          id="card-search"
-          v-model="searchKeyword"
-          type="search"
-          class="ml-3 h-full w-full bg-transparent text-sm text-zinc-800 outline-none placeholder:text-zinc-400"
-          placeholder="카드명 또는 혜택을 검색하세요"
-        />
-      </label>
-
-      <div class="mt-8 grid gap-6 lg:grid-cols-[250px_1fr]">
-        <aside class="h-fit rounded-xl bg-white p-6 shadow-md shadow-zinc-200/80">
-          <h2 class="text-base font-bold text-zinc-900">필터</h2>
-
-          <div class="mt-6">
-            <h3 class="text-sm font-bold text-zinc-800">혜택 유형</h3>
-            <div class="mt-3 flex flex-wrap gap-2 lg:flex-col">
-              <button
-                v-for="filter in benefitFilters"
-                :key="filter.label"
-                type="button"
-                class="w-fit rounded-full border px-4 py-1.5 text-sm transition"
-                :class="
-                  selectedBenefits.includes(filter.value)
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-zinc-200 bg-white text-zinc-600 hover:border-blue-300'
-                "
-                @click="toggleBenefit(filter.value)"
-              >
-                {{ filter.label }}
-              </button>
-            </div>
-          </div>
-
-          <div class="mt-7">
-            <h3 class="text-sm font-bold text-zinc-800">연회비</h3>
-            <label
-              v-for="filter in annualFeeFilters"
-              :key="filter.value"
-              class="mt-3 flex items-center gap-2 text-sm text-zinc-600"
-            >
-              <input
-                v-model="selectedAnnualFee"
-                type="radio"
-                name="annual-fee"
-                :value="filter.value"
-                class="h-4 w-4 accent-blue-600"
-              />
-              {{ filter.label }}
-            </label>
-          </div>
-
-          <div class="mt-7">
-            <h3 class="text-sm font-bold text-zinc-800">카드사</h3>
-            <label
-              v-for="filter in companyFilters"
-              :key="filter.value"
-              class="mt-3 flex items-center gap-2 text-sm"
-              :class="filter.value === 'samsung' ? 'text-zinc-700' : 'text-zinc-400'"
-            >
-              <input
-                v-model="selectedCompany"
-                type="radio"
-                name="company"
-                :value="filter.value"
-                :disabled="filter.value !== 'samsung'"
-                class="h-4 w-4 accent-blue-600 disabled:accent-zinc-200"
-              />
-              {{ filter.label }}
-            </label>
-          </div>
-
-          <div class="mt-7">
-            <h3 class="text-sm font-bold text-zinc-800">전월 실적</h3>
-            <label
-              v-for="filter in prevSpendingFilters"
-              :key="filter.value"
-              class="mt-3 flex items-center gap-2 text-sm text-zinc-600"
-            >
-              <input
-                v-model="selectedPrevSpending"
-                type="radio"
-                name="prev-spending"
-                :value="filter.value"
-                class="h-4 w-4 accent-blue-600"
-              />
-              {{ filter.label }}
-            </label>
-          </div>
-
-          <button
-            type="button"
-            class="mt-6 h-11 w-full rounded-lg bg-blue-600 text-sm font-bold text-white transition hover:bg-blue-700"
-            @click="resetFilters"
-          >
-            필터 적용
-          </button>
-        </aside>
-
-        <div>
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p class="text-sm font-bold text-zinc-900">총 {{ filteredCards.length }}개 카드</p>
-            <label class="flex items-center gap-2 self-start text-sm text-zinc-500 sm:self-auto">
-              정렬:
-              <select v-model="sortOption" class="rounded-md bg-transparent text-zinc-700 outline-none">
-                <option value="popular">인기순</option>
-                <option value="benefit">혜택순</option>
-                <option value="fee">연회비 낮은순</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="mt-4 grid gap-6 md:grid-cols-2">
-            <article
-              v-for="card in filteredCards"
-              :key="card.id"
-              class="rounded-xl bg-white p-6 shadow-lg shadow-zinc-200/90"
-            >
-              <div class="flex gap-6">
-                <div class="flex h-28 w-32 shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 overflow-hidden">
-                  <img
-                    v-if="card.image_url && !failedImages.has(card.id)"
-                    :src="card.image_url"
-                    :alt="card.card_name"
-                    class="h-full w-full object-contain p-2"
-                    @error="onImageError(card.id)"
-                  />
-                  <div
-                    v-else
-                    class="flex h-full w-full items-end rounded-lg p-3"
-                    style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #3b82f6 100%)"
-                  >
-                    <span class="text-[10px] font-bold leading-tight text-white/90">{{ card.card_name }}</span>
-                  </div>
-                </div>
-
-                <div class="min-w-0 flex-1">
-                  <h2 class="truncate text-lg font-bold text-zinc-950">{{ card.card_name }}</h2>
-                  <p class="mt-1 text-sm text-zinc-500">{{ getMainBenefit(card) }} 특화</p>
-                  <p class="mt-1 text-sm text-zinc-500">연회비 {{ formatWon(card.annual_fee) }}원</p>
-                </div>
-              </div>
-
-              <div class="mt-6 flex flex-wrap gap-2">
-                <span class="rounded-full border border-zinc-200 px-4 py-1.5 text-xs text-zinc-600">
-                  {{ formatPrevSpending(card.min_prev_month_spending) }}
-                </span>
-                <span class="rounded-full border border-zinc-200 px-4 py-1.5 text-xs text-zinc-600">
-                  {{ getMainBenefit(card) }}
-                </span>
-              </div>
-
-              <div class="mt-6 flex items-center justify-between gap-4">
-                <p class="text-sm font-bold text-emerald-600">
-                  예상 월 혜택 ₩{{ formatWon(card.estimatedBenefit) }}
-                </p>
-                <RouterLink
-                  :to="{ name: 'card-detail', params: { id: card.id } }"
-                  class="inline-flex h-9 w-24 items-center justify-center rounded-md border border-blue-600 text-sm font-bold text-blue-600 transition hover:bg-blue-50"
-                >
-                  상세
-                </RouterLink>
-              </div>
-            </article>
-          </div>
-
-          <div
-            v-if="filteredCards.length === 0"
-            class="mt-4 rounded-xl bg-white p-10 text-center text-sm text-zinc-500 shadow-md shadow-zinc-200/80"
-          >
-            조건에 맞는 카드가 없습니다.
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-</template>
