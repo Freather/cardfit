@@ -11,23 +11,42 @@
   >
     이용 가능 여부를 확인하는 중...
   </section>
+  <section
+    v-else-if="isLoadingRecommendations"
+    class="min-h-screen bg-[#fbf9f8] px-4 py-20 text-center text-sm font-bold text-gray-500 md:px-10 lg:px-20"
+  >
+    AI가 소비 데이터와 설문을 분석하는 중...
+  </section>
   <section v-else class="min-h-screen bg-[#fbf9f8] px-4 py-10 md:px-10 lg:px-20">
     <div class="mx-auto max-w-6xl">
       <header class="max-w-3xl">
         <h1 class="text-3xl font-extrabold text-gray-950 md:text-4xl">AI가 분석한 최적의 카드입니다</h1>
         <p class="mt-4 text-sm leading-6 text-gray-600">
-          최근 3개월간의 소비 패턴을 분석한 결과,
+          최근 소비 패턴을 분석한 결과,
           <strong class="font-extrabold text-[#001278]">{{ strongestCategoryLabel }}</strong>
-          비중이 가장 높았습니다. 당신의 소비 습관과 가장 잘 맞는 혜택의 카드를 확인해보세요.
+          비중이 가장 높았습니다. 소비 습관과 가장 잘 맞는 혜택의 카드를 확인해보세요.
+        </p>
+        <p
+          v-if="recommendationError"
+          class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700"
+        >
+          {{ recommendationError }}
         </p>
       </header>
 
       <div class="mt-12 grid gap-8 lg:grid-cols-[1.35fr_0.9fr]">
         <PrimaryRecommendationCard
+          v-if="primaryRecommendation"
           :recommendation="primaryRecommendation"
           :card="primaryCard"
           :benefits="primaryBenefits"
         />
+        <div
+          v-else
+          class="rounded-xl border border-[#e5e0dd] bg-white p-8 text-sm font-bold text-gray-500 shadow-[0_18px_52px_rgba(0,18,120,0.08)]"
+        >
+          추천 결과가 없습니다. 소비 설문과 CSV 업로드 상태를 다시 확인해 주세요.
+        </div>
 
         <aside class="space-y-7">
           <SecondaryRecommendationList :cards="secondaryCards" />
@@ -48,36 +67,49 @@ import SecondaryRecommendationList from '../components/recommendation/SecondaryR
 import { useAnalysisAccess } from '../composables/useAnalysisAccess'
 import { cardData } from '../data/cardData'
 import { mockAiRecommendations, mockAiReport } from '../data/mockReportData'
+import { spendingCategories } from '../data/spendingCategoryData'
+import { aiService } from '../services/aiService'
+import { spendingService } from '../services/spendingService'
+import { useCardStore } from '../stores/cardStore'
 
 const { authStore, spendingStore, canUseAnalysis, missingRequirements } = useAnalysisAccess()
+const cardStore = useCardStore()
 const isCheckingAccess = ref(true)
-const recommendations = mockAiRecommendations
+const isLoadingRecommendations = ref(false)
+const recommendationError = ref('')
+const recommendations = ref([])
+const aiReport = ref(null)
+const categoryBreakdown = ref([])
 
 const resolvedRecommendations = computed(() =>
-  recommendations.map((recommendation, index) => {
+  recommendations.value.map((recommendation, index) => {
     const detail = findCardDetail(recommendation)
     return {
       ...recommendation,
       detail,
-      score: index === 0 ? 98 : index === 1 ? 92 : 85,
+      score: recommendation.score || (index === 0 ? 98 : index === 1 ? 92 : 85),
       benefitText: getBenefitText(detail),
     }
   }),
 )
 
-const primaryRecommendation = computed(() => resolvedRecommendations.value[0])
-const primaryCard = computed(() => primaryRecommendation.value.detail)
+const primaryRecommendation = computed(() => resolvedRecommendations.value[0] || null)
+const primaryCard = computed(() => primaryRecommendation.value?.detail || {})
 const secondaryCards = computed(() => resolvedRecommendations.value.slice(1, 3))
 const strongestCategoryLabel = computed(() => analysisBars.value[0]?.label || '주요 소비')
-const analysisBars = computed(() =>
-  [...(mockAiReport.category_breakdown || [])]
+const analysisBars = computed(() => {
+  const items = categoryBreakdown.value.length
+    ? categoryBreakdown.value
+    : buildBreakdownFromBasedOn(aiReport.value?.based_on)
+
+  return [...items]
     .sort((a, b) => Number(b.ratio) - Number(a.ratio))
     .slice(0, 3)
     .map((item) => ({
       ...item,
       ratio: Math.round(Number(item.ratio || 0)),
-    })),
-)
+    }))
+})
 const primaryBenefits = computed(() => {
   const benefits = primaryCard.value?.benefits || []
 
@@ -122,10 +154,11 @@ const benefitTypeMap = {
 
 function findCardDetail(recommendation) {
   const normalizedName = normalizeCardName(recommendation.card_name)
-  const byName = cardData.find((card) => normalizeCardName(card.card_name) === normalizedName)
-  const byId = cardData.find((card) => card.id === recommendation.card_id)
+  const cards = cardStore.cards.length ? cardStore.cards : cardData
+  const byId = cards.find((card) => String(card.id) === String(recommendation.card_id))
+  const byName = cards.find((card) => normalizeCardName(card.card_name) === normalizedName)
 
-  return byName || byId || {
+  return byId || byName || {
     id: recommendation.card_id,
     card_company: '삼성카드',
     card_name: recommendation.card_name,
@@ -151,9 +184,65 @@ function getBenefitText(card) {
   return `${title} ${Number(benefit.discount_rate || 0)}% 혜택`
 }
 
+function buildBreakdownFromBasedOn(basedOn = {}) {
+  const totals = spendingCategories.map((category) => ({
+    category: category.category,
+    label: category.label,
+    total: Number(basedOn[category.key] || 0),
+  }))
+  const totalAmount = totals.reduce((sum, item) => sum + item.total, 0)
+
+  return totals
+    .filter((item) => item.total > 0)
+    .map((item) => ({
+      ...item,
+      ratio: totalAmount ? Math.round((item.total / totalAmount) * 1000) / 10 : 0,
+    }))
+}
+
+async function loadRecommendationData() {
+  isLoadingRecommendations.value = true
+  recommendationError.value = ''
+
+  try {
+    if (!cardStore.cards.length) {
+      await cardStore.fetchCards()
+    }
+
+    const params = spendingStore.latestSurvey?.id ? { survey_id: spendingStore.latestSurvey.id } : {}
+    const [recommendationResponse, breakdownResponse] = await Promise.all([
+      aiService.fetchRecommendations(params),
+      spendingService.fetchCategoryBreakdown(params).catch(() => null),
+    ])
+
+    aiReport.value = recommendationResponse?.data || null
+    recommendations.value = aiReport.value?.recommendations || []
+    categoryBreakdown.value = breakdownResponse?.data?.breakdown || []
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      aiReport.value = mockAiReport
+      recommendations.value = mockAiRecommendations
+      categoryBreakdown.value = mockAiReport.category_breakdown || []
+      return
+    }
+
+    aiReport.value = null
+    recommendations.value = []
+    categoryBreakdown.value = []
+    recommendationError.value =
+      error?.response?.data?.detail || 'AI 추천 결과를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
+  } finally {
+    isLoadingRecommendations.value = false
+  }
+}
+
 onMounted(async () => {
   if (authStore.isAuthenticated) {
     await spendingStore.fetchLatestSurvey().catch(() => null)
+  }
+
+  if (canUseAnalysis.value) {
+    await loadRecommendationData()
   }
 
   isCheckingAccess.value = false
