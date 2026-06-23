@@ -15,7 +15,7 @@
         {{ description }}
       </p>
 
-      <div class="mt-7 flex flex-wrap justify-center gap-2">
+      <div v-if="!compact" class="mt-7 flex flex-wrap justify-center gap-2">
         <span
           v-for="item in missingRequirements"
           :key="item"
