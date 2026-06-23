@@ -24,9 +24,33 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token refresh or forced logout can be added here after API policy is finalized.
+  async (error) => {
+    const originalRequest = error.config
+
+    if (error.response?.status === 401 && !originalRequest?._retry) {
+      const refreshToken = localStorage.getItem(TOKEN_STORAGE_KEYS.refresh)
+
+      if (refreshToken) {
+        originalRequest._retry = true
+
+        try {
+          const { data } = await axios.post(
+            `${api.defaults.baseURL}/api/accounts/token/refresh/`,
+            { refresh: refreshToken },
+          )
+
+          saveTokens({
+            access: data.access,
+            refresh: data.refresh || refreshToken,
+          })
+
+          originalRequest.headers = originalRequest.headers || {}
+          originalRequest.headers.Authorization = `Bearer ${data.access}`
+          return api(originalRequest)
+        } catch {
+          clearTokens()
+        }
+      }
     }
 
     return Promise.reject(error)

@@ -19,8 +19,16 @@
     />
 
     <CardAiReason
-      v-if="authStore.isAuthenticated"
+      v-if="!isCheckingAnalysisAccess && canUseAnalysis"
       :keywords="aiKeywords"
+    />
+    <AnalysisRequirementNotice
+      v-else-if="!isCheckingAnalysisAccess"
+      compact
+      eyebrow="AI 맞춤 추천 사유 준비 필요"
+      title="AI 맞춤 추천 사유를 보려면 CSV 업로드와 소비 설문이 필요합니다."
+      description="카드 상세의 AI 추천 사유는 CSV 소비 데이터와 설문을 함께 분석한 뒤 제공됩니다. 마이페이지에서 두 항목을 완료해 주세요."
+      :missing-requirements="missingRequirements"
     />
 
     <CardBenefitList
@@ -48,13 +56,13 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 
+import AnalysisRequirementNotice from '../components/common/AnalysisRequirementNotice.vue'
 import CardAiReason from '../components/cards/CardAiReason.vue'
 import CardBenefitList from '../components/cards/CardBenefitList.vue'
 import CardConditionTable from '../components/cards/CardConditionTable.vue'
 import CardDetailHeader from '../components/cards/CardDetailHeader.vue'
-import { SURVEY_PREFERENCE_STORAGE_KEY } from '../composables/useAnalysisAccess'
+import { SURVEY_PREFERENCE_STORAGE_KEY, useAnalysisAccess } from '../composables/useAnalysisAccess'
 import { getBenefitCategoryLabel } from '../data/benefitData'
-import { useAuthStore } from '../stores/authStore'
 import { useCardStore } from '../stores/cardStore'
 import { useCompareStore } from '../stores/compareStore'
 
@@ -67,13 +75,14 @@ const props = defineProps({
 
 const compareStore = useCompareStore()
 const cardStore = useCardStore()
-const authStore = useAuthStore()
+const { authStore, spendingStore, canUseAnalysis, missingRequirements } = useAnalysisAccess()
 
 const compareMessage = ref('')
 const compareMessageTone = ref('info')
 const wishlistMessage = ref('')
 const wishlistMessageTone = ref('info')
 const wishlistLoading = ref(false)
+const isCheckingAnalysisAccess = ref(true)
 
 const card = computed(() => cardStore.selectedCard || {})
 const isWished = computed(() => {
@@ -137,8 +146,14 @@ const conditionRows = [
 
 const aiKeywords = ['배달 앱', '스트리밍 서비스', '생활비 결제']
 
-onMounted(() => {
+onMounted(async () => {
   if (props.id) cardStore.fetchCardDetail(props.id)
+
+  if (authStore.isAuthenticated) {
+    await spendingStore.fetchLatestSurvey().catch(() => null)
+  }
+
+  isCheckingAnalysisAccess.value = false
 })
 
 watch(

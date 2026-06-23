@@ -1,6 +1,6 @@
 <template>
-  <section class="min-h-screen bg-[#fbf9f8] px-4 py-12 md:px-10 lg:px-20">
-    <div class="mx-auto flex max-w-3xl flex-col items-center rounded-xl border border-[#dfe3f1] bg-white px-6 py-14 text-center shadow-[0_12px_34px_rgba(0,18,120,0.08)]">
+  <section :class="sectionClass">
+    <div :class="panelClass">
       <div class="flex h-14 w-14 items-center justify-center rounded-full bg-[#eef1ff] text-[#001278]">
         <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M12 9v4" />
@@ -15,7 +15,7 @@
         {{ description }}
       </p>
 
-      <div class="mt-7 flex flex-wrap justify-center gap-2">
+      <div v-if="!compact" class="mt-7 flex flex-wrap justify-center gap-2">
         <span
           v-for="item in missingRequirements"
           :key="item"
@@ -50,6 +50,10 @@ import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 const props = defineProps({
+  compact: {
+    type: Boolean,
+    default: false,
+  },
   eyebrow: {
     type: String,
     default: '분석 준비가 필요합니다',
@@ -70,4 +74,14 @@ const props = defineProps({
 
 const route = useRoute()
 const needsLogin = computed(() => props.missingRequirements.includes('로그인'))
+const sectionClass = computed(() =>
+  props.compact
+    ? 'border-b border-zinc-200 bg-white/70 px-5 py-12 md:px-10 lg:px-20'
+    : 'min-h-screen bg-[#fbf9f8] px-4 py-12 md:px-10 lg:px-20',
+)
+const panelClass = computed(() =>
+  props.compact
+    ? 'mx-auto flex max-w-7xl flex-col items-center rounded-xl border border-[#dfe3f1] bg-white px-6 py-10 text-center shadow-[0_12px_34px_rgba(0,18,120,0.08)]'
+    : 'mx-auto flex max-w-3xl flex-col items-center rounded-xl border border-[#dfe3f1] bg-white px-6 py-14 text-center shadow-[0_12px_34px_rgba(0,18,120,0.08)]',
+)
 </script>

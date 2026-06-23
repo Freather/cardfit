@@ -4,6 +4,41 @@ import { defineStore } from 'pinia'
 import { cardData } from '../data/cardData'
 import { cardService } from '../services/cardService'
 
+const categoryMap = {
+  transportation: 'transport',
+  leisure: 'entertainment',
+  culture: 'entertainment',
+  medical: 'health',
+  hospital: 'health',
+  etc: 'other',
+}
+
+const benefitTypeMap = {
+  accumulate: 'point',
+}
+
+function normalizeBenefit(benefit = {}) {
+  return {
+    ...benefit,
+    benefit_category: categoryMap[benefit.benefit_category] || benefit.benefit_category,
+    benefit_type: benefitTypeMap[benefit.benefit_type] || benefit.benefit_type,
+  }
+}
+
+function normalizeCard(card = {}) {
+  return {
+    ...card,
+    benefits: Array.isArray(card.benefits) ? card.benefits.map(normalizeBenefit) : [],
+  }
+}
+
+function normalizeWish(wish = {}) {
+  return {
+    ...wish,
+    card: wish.card ? normalizeCard(wish.card) : wish.card,
+  }
+}
+
 export const useCardStore = defineStore('cards', () => {
   const cards = ref([...cardData])
   const selectedCard = ref(null)
@@ -50,7 +85,7 @@ export const useCardStore = defineStore('cards', () => {
 
     try {
       const { data } = await cardService.fetchCards(params)
-      cards.value = data.results || data
+      cards.value = (data.results || data).map(normalizeCard)
       pagination.value.total = data.count || cards.value.length
       return cards.value
     } catch (err) {
@@ -67,8 +102,8 @@ export const useCardStore = defineStore('cards', () => {
 
     try {
       const { data } = await cardService.fetchCardDetail(id)
-      selectedCard.value = data
-      return data
+      selectedCard.value = normalizeCard(data)
+      return selectedCard.value
     } catch (err) {
       error.value = err
       selectedCard.value = cardData.find((card) => String(card.id) === String(id)) || null
@@ -80,22 +115,23 @@ export const useCardStore = defineStore('cards', () => {
 
   async function fetchWishlist() {
     const { data } = await cardService.fetchWishlist()
-    wishlist.value = data.results || data
+    wishlist.value = (data.results || data).map(normalizeWish)
     return wishlist.value
   }
 
   async function addWishlist(cardId, source = 'detail') {
     const { data } = await cardService.addWishlist(cardId, source)
-    if (!wishlist.value.some((wish) => wish.card?.id === data.card?.id)) {
-      wishlist.value = [data, ...wishlist.value]
+    const normalizedWish = normalizeWish(data)
+    if (!wishlist.value.some((wish) => wish.card?.id === normalizedWish.card?.id)) {
+      wishlist.value = [normalizedWish, ...wishlist.value]
     }
-    if (selectedCard.value?.id === data.card?.id) {
+    if (selectedCard.value?.id === normalizedWish.card?.id) {
       selectedCard.value = { ...selectedCard.value, is_wished: true }
     }
     cards.value = cards.value.map((card) =>
-      card.id === data.card?.id ? { ...card, is_wished: true } : card,
+      card.id === normalizedWish.card?.id ? { ...card, is_wished: true } : card,
     )
-    return data
+    return normalizedWish
   }
 
   async function removeWishlist(cardId) {

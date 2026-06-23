@@ -24,4 +24,8 @@ export const authService = {
   updateProfile(payload) {
     return api.put('/api/accounts/profile/', payload)
   },
+
+  selectCard(selectedCard) {
+    return api.put('/api/accounts/select-card/', { selected_card: selectedCard })
+  },
 }
