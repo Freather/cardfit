@@ -26,7 +26,8 @@ export const useSpendingStore = defineStore('spending', () => {
     spendingForm.value = { ...defaultSpendingForm }
   }
 
-  async function createSurvey(payload = spendingForm.value) {
+  async function createSurvey(payload = spendingForm.value, options = {}) {
+    const { fallbackOnError = true } = options
     isLoading.value = true
     error.value = null
 
@@ -36,6 +37,10 @@ export const useSpendingStore = defineStore('spending', () => {
       return data
     } catch (err) {
       error.value = err
+      if (!fallbackOnError) {
+        throw err
+      }
+
       latestSurvey.value = {
         id: 'local-preview',
         ...payload,

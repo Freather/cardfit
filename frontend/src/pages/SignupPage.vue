@@ -41,6 +41,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import SignupForm from '../components/auth/SignupForm.vue'
+import { getApiErrorMessage } from '../services/api'
 import { useAuthStore } from '../stores/authStore'
 
 const router = useRouter()
@@ -93,22 +94,11 @@ async function handleSubmit() {
     await authStore.fetchProfile().catch(() => null)
     router.push({ name: 'home' })
   } catch (error) {
-    errorMessage.value = getSignupErrorMessage(error)
+    errorMessage.value = getApiErrorMessage(
+      error,
+      '회원가입에 실패했습니다. 입력 정보를 확인해 주세요.',
+    )
   }
 }
 
-function getSignupErrorMessage(error) {
-  const fallback = '회원가입에 실패했습니다. 다시 시도해주세요.'
-  const errorData = error?.response?.data
-
-  if (!errorData) return fallback
-  if (errorData.detail) return errorData.detail
-  if (typeof errorData !== 'object') return fallback
-
-  const firstError = Object.values(errorData)[0]
-  if (Array.isArray(firstError) && firstError[0]) return firstError[0]
-  if (typeof firstError === 'string') return firstError
-
-  return fallback
-}
 </script>

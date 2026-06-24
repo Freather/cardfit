@@ -1,8 +1,6 @@
 <template>
   <section class="min-h-screen bg-[#faf8f7] px-4 py-4 text-[#121212] md:px-6">
-    <div v-if="isLoading" class="flex min-h-[60vh] items-center justify-center text-sm font-bold text-[#4d5870]">
-      마이페이지 정보를 불러오는 중...
-    </div>
+    <ProfilePageSkeleton v-if="isLoading" />
 
     <div v-else class="mx-auto grid max-w-[1160px] gap-7 lg:grid-cols-[330px_1fr]">
       <aside class="grid content-start gap-5">
@@ -76,12 +74,14 @@ import { useRouter } from 'vue-router'
 
 import CsvDataTable from '../components/profile/CsvDataTable.vue'
 import CsvUploadModal from '../components/profile/CsvUploadModal.vue'
+import ProfilePageSkeleton from '../components/profile/ProfilePageSkeleton.vue'
 import ProfileEditModal from '../components/profile/ProfileEditModal.vue'
 import ProfileInfoCard from '../components/profile/ProfileInfoCard.vue'
 import ProfileWishlistCard from '../components/profile/ProfileWishlistCard.vue'
 import SurveyEditModal from '../components/profile/SurveyEditModal.vue'
 import SurveySummaryCard from '../components/profile/SurveySummaryCard.vue'
 import { markCsvUploadComplete, SURVEY_PREFERENCE_STORAGE_KEY } from '../composables/useAnalysisAccess'
+import { getApiErrorMessage } from '../services/api'
 import { authService } from '../services/authService'
 import { useAuthStore } from '../stores/authStore'
 import { useCardStore } from '../stores/cardStore'
@@ -289,7 +289,7 @@ async function handleProfileSave() {
       return
     }
 
-    profileError.value = '회원정보 수정에 실패했습니다.'
+    profileError.value = getApiErrorMessage(error, '회원 정보를 수정하지 못했습니다. 잠시 후 다시 시도해 주세요.')
   } finally {
     isProfileSaving.value = false
   }
@@ -332,9 +332,13 @@ async function handleSurveySave() {
     payload[option.field] = surveyForm.value.categories.includes(option.value) ? amountPerCategory : 0
   })
 
-  await spendingStore.createSurvey(payload)
-  saveSurveyPreferences()
-  closeSurveyModal()
+  try {
+    await spendingStore.createSurvey(payload, { fallbackOnError: false })
+    saveSurveyPreferences()
+    closeSurveyModal()
+  } catch (error) {
+    surveyError.value = getApiErrorMessage(error, '소비 설문을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.')
+  }
 }
 
 function loadSavedSurveyPreferences() {
@@ -439,7 +443,10 @@ async function handleCsvUpload() {
     ]
     closeUploadModal()
   } catch (error) {
-    uploadError.value = '업로드에 실패했습니다. 로그인 상태와 CSV 형식을 확인해주세요.'
+    uploadError.value = getApiErrorMessage(
+      error,
+      '업로드에 실패했습니다. 로그인 상태와 CSV 형식을 확인해 주세요.',
+    )
   } finally {
     isUploading.value = false
   }

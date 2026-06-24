@@ -55,6 +55,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import LoginForm from '../components/auth/LoginForm.vue'
+import { getApiErrorMessage } from '../services/api'
 import { useAuthStore } from '../stores/authStore'
 
 const router = useRouter()
@@ -85,22 +86,11 @@ async function handleSubmit() {
     await authStore.fetchProfile().catch(() => null)
     router.push(getRedirectPath())
   } catch (error) {
-    errorMessage.value = getLoginErrorMessage(error)
+    errorMessage.value = getApiErrorMessage(
+      error,
+      '로그인에 실패했습니다. 이메일과 비밀번호를 확인해 주세요.',
+    )
   }
 }
 
-function getLoginErrorMessage(error) {
-  const fallback = '로그인에 실패했습니다. 다시 시도해주세요.'
-  const errorData = error?.response?.data
-
-  if (!errorData) return fallback
-  if (errorData.detail) return errorData.detail
-  if (typeof errorData !== 'object') return fallback
-
-  const firstError = Object.values(errorData)[0]
-  if (Array.isArray(firstError) && firstError[0]) return firstError[0]
-  if (typeof firstError === 'string') return firstError
-
-  return fallback
-}
 </script>

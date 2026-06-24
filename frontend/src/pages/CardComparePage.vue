@@ -5,12 +5,10 @@
     title="카드 비교를 이용하려면 CSV 업로드와 소비 설문이 필요합니다."
     :missing-requirements="missingRequirements"
   />
-  <section
+  <AnalysisAccessSkeleton
     v-else-if="isCheckingAccess"
-    class="min-h-screen bg-[#fbf9f8] px-4 py-20 text-center text-sm font-bold text-gray-500 md:px-10 lg:px-20"
-  >
-    이용 가능 여부를 확인하는 중...
-  </section>
+    message="카드 비교 이용 가능 여부를 확인하는 중입니다..."
+  />
   <section v-else class="min-h-screen bg-[#fbf9f8] px-4 py-8 md:px-10 lg:px-20">
     <div class="mx-auto max-w-7xl space-y-8">
       <header class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -48,6 +46,7 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import AnalysisRequirementNotice from '../components/common/AnalysisRequirementNotice.vue'
+import AnalysisAccessSkeleton from '../components/common/AnalysisAccessSkeleton.vue'
 import CompareEmptyState from '../components/compare/CompareEmptyState.vue'
 import CompareNotice from '../components/compare/CompareNotice.vue'
 import CompareTable from '../components/compare/CompareTable.vue'

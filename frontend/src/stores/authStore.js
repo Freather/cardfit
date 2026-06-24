@@ -37,6 +37,13 @@ export const useAuthStore = defineStore('auth', () => {
     })
   }
 
+  function resetAuthState() {
+    user.value = null
+    accessToken.value = null
+    refreshToken.value = null
+    clearTokens()
+  }
+
   async function login(credentials) {
     isLoading.value = true
     error.value = null
@@ -90,18 +97,25 @@ export const useAuthStore = defineStore('auth', () => {
       return user.value
     }
 
-    const { data } = await authService.fetchProfile()
-    user.value = data
-    return data
+    error.value = null
+
+    try {
+      const { data } = await authService.fetchProfile()
+      user.value = data
+      return data
+    } catch (err) {
+      error.value = err
+      if (err?.status === 401 || err?.response?.status === 401) {
+        resetAuthState()
+      }
+      throw err
+    }
   }
 
   async function logout() {
     const tokenForLogout = refreshToken.value
 
-    user.value = null
-    accessToken.value = null
-    refreshToken.value = null
-    clearTokens()
+    resetAuthState()
 
     if (tokenForLogout && tokenForLogout !== MOCK_REFRESH_TOKEN) {
       try {
