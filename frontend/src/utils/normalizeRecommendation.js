@@ -1,9 +1,16 @@
 function formatWon(value) {
-  return new Intl.NumberFormat('ko-KR', {
-    style: 'currency',
-    currency: 'KRW',
-    maximumFractionDigits: 0,
-  }).format(Math.max(0, Math.round(Number(value || 0))))
+  return `${Math.max(0, Math.round(Number(value || 0))).toLocaleString('ko-KR')}원`
+}
+
+function normalizeWonLabel(value) {
+  const raw = String(value || '').trim().replace(/^월\s*/, '')
+  if (!raw) return formatWon(0)
+  if (raw.includes('원')) return raw
+
+  const numeric = Number(raw.replace(/[,\s₩￦]/g, ''))
+  if (Number.isFinite(numeric)) return formatWon(numeric)
+
+  return raw
 }
 
 function buildReason(recommendation) {
@@ -22,12 +29,12 @@ function buildReason(recommendation) {
     return `연회비를 반영한 예상 순혜택은 연 ${formatWon(recommendation.net_benefit)}입니다.`
   }
 
-  return '소비 패턴과 카드 혜택 조건을 기준으로 추천된 카드입니다.'
+  return '소비 패턴과 카드 혜택 조건을 기준으로 추천한 카드입니다.'
 }
 
 function buildExpectedMonthlyBenefit(recommendation) {
   if (recommendation.expected_monthly_benefit) {
-    return recommendation.expected_monthly_benefit
+    return normalizeWonLabel(recommendation.expected_monthly_benefit)
   }
 
   const monthly =
@@ -41,13 +48,12 @@ function buildExpectedMonthlyBenefit(recommendation) {
   return formatWon(monthly)
 }
 
-function buildScore(recommendation, index) {
-  if (recommendation.score) return recommendation.score
+function buildScore(recommendation) {
+  if (Number.isFinite(Number(recommendation.score)) && Number(recommendation.score) > 0) {
+    return Math.round(Number(recommendation.score))
+  }
 
-  const netBenefit = Number(recommendation.net_benefit || 0)
-  if (netBenefit > 0) return Math.min(99, Math.max(80, Math.round(netBenefit / 10000) + 80))
-
-  return index === 0 ? 98 : index === 1 ? 92 : 85
+  return null
 }
 
 export function normalizeRecommendation(recommendation = {}, index = 0) {
@@ -58,7 +64,7 @@ export function normalizeRecommendation(recommendation = {}, index = 0) {
     card_name: recommendation.card_name || '추천 카드',
     reason: buildReason(recommendation),
     expected_monthly_benefit: buildExpectedMonthlyBenefit(recommendation),
-    score: buildScore(recommendation, index),
+    score: buildScore(recommendation),
   }
 }
 

@@ -1,12 +1,18 @@
 const spendingKeyByCategory = {
   food: 'food_monthly',
   transport: 'transport_monthly',
+  transportation: 'transport_monthly',
   fuel: 'fuel_monthly',
   shopping: 'shopping_monthly',
   entertainment: 'entertainment_monthly',
+  leisure: 'entertainment_monthly',
+  culture: 'entertainment_monthly',
   communication: 'communication_monthly',
   health: 'health_monthly',
+  medical: 'health_monthly',
+  hospital: 'health_monthly',
   other: 'other_monthly',
+  etc: 'other_monthly',
 }
 
 export function calculateMonthlyBenefit(card, spending = {}) {

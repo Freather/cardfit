@@ -84,9 +84,10 @@ export const useCardStore = defineStore('cards', () => {
     error.value = null
 
     try {
-      const { data } = await cardService.fetchCards(params)
+      const { data, error: requestError } = await cardService.fetchCards(params)
       cards.value = (data.results || data).map(normalizeCard)
       pagination.value.total = data.count || cards.value.length
+      error.value = requestError || null
       return cards.value
     } catch (err) {
       error.value = err
@@ -101,8 +102,9 @@ export const useCardStore = defineStore('cards', () => {
     error.value = null
 
     try {
-      const { data } = await cardService.fetchCardDetail(id)
+      const { data, error: requestError } = await cardService.fetchCardDetail(id)
       selectedCard.value = normalizeCard(data)
+      error.value = requestError || null
       return selectedCard.value
     } catch (err) {
       error.value = err
@@ -114,35 +116,57 @@ export const useCardStore = defineStore('cards', () => {
   }
 
   async function fetchWishlist() {
-    const { data } = await cardService.fetchWishlist()
-    wishlist.value = (data.results || data).map(normalizeWish)
-    return wishlist.value
+    error.value = null
+
+    try {
+      const { data } = await cardService.fetchWishlist()
+      wishlist.value = (data.results || data).map(normalizeWish)
+      return wishlist.value
+    } catch (err) {
+      error.value = err
+      wishlist.value = []
+      return wishlist.value
+    }
   }
 
   async function addWishlist(cardId, source = 'detail') {
-    const { data } = await cardService.addWishlist(cardId, source)
-    const normalizedWish = normalizeWish(data)
-    if (!wishlist.value.some((wish) => wish.card?.id === normalizedWish.card?.id)) {
-      wishlist.value = [normalizedWish, ...wishlist.value]
+    error.value = null
+
+    try {
+      const { data } = await cardService.addWishlist(cardId, source)
+      const normalizedWish = normalizeWish(data)
+      if (!wishlist.value.some((wish) => wish.card?.id === normalizedWish.card?.id)) {
+        wishlist.value = [normalizedWish, ...wishlist.value]
+      }
+      if (selectedCard.value?.id === normalizedWish.card?.id) {
+        selectedCard.value = { ...selectedCard.value, is_wished: true }
+      }
+      cards.value = cards.value.map((card) =>
+        card.id === normalizedWish.card?.id ? { ...card, is_wished: true } : card,
+      )
+      return normalizedWish
+    } catch (err) {
+      error.value = err
+      throw err
     }
-    if (selectedCard.value?.id === normalizedWish.card?.id) {
-      selectedCard.value = { ...selectedCard.value, is_wished: true }
-    }
-    cards.value = cards.value.map((card) =>
-      card.id === normalizedWish.card?.id ? { ...card, is_wished: true } : card,
-    )
-    return normalizedWish
   }
 
   async function removeWishlist(cardId) {
-    await cardService.removeWishlist(cardId)
-    wishlist.value = wishlist.value.filter((wish) => String(wish.card?.id) !== String(cardId))
-    if (selectedCard.value?.id && String(selectedCard.value.id) === String(cardId)) {
-      selectedCard.value = { ...selectedCard.value, is_wished: false }
+    error.value = null
+
+    try {
+      await cardService.removeWishlist(cardId)
+      wishlist.value = wishlist.value.filter((wish) => String(wish.card?.id) !== String(cardId))
+      if (selectedCard.value?.id && String(selectedCard.value.id) === String(cardId)) {
+        selectedCard.value = { ...selectedCard.value, is_wished: false }
+      }
+      cards.value = cards.value.map((card) =>
+        String(card.id) === String(cardId) ? { ...card, is_wished: false } : card,
+      )
+    } catch (err) {
+      error.value = err
+      throw err
     }
-    cards.value = cards.value.map((card) =>
-      String(card.id) === String(cardId) ? { ...card, is_wished: false } : card,
-    )
   }
 
   function setFilters(nextFilters) {

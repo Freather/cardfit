@@ -1,22 +1,18 @@
 <template>
   <AnalysisRequirementNotice
-    v-if="!isCheckingAccess && !canUseAnalysis"
+    v-if="!isCheckingAccess && !isPreparingAccess && !canUseAnalysis"
     eyebrow="AI 카드 추천 준비 필요"
     title="AI 추천 결과를 보려면 CSV 업로드와 소비 설문이 필요합니다."
     :missing-requirements="missingRequirements"
   />
-  <section
+  <AnalysisAccessSkeleton
     v-else-if="isCheckingAccess"
-    class="min-h-screen bg-[#fbf9f8] px-4 py-20 text-center text-sm font-bold text-gray-500 md:px-10 lg:px-20"
-  >
-    이용 가능 여부를 확인하는 중...
-  </section>
-  <section
-    v-else-if="isLoadingRecommendations"
-    class="min-h-screen bg-[#fbf9f8] px-4 py-20 text-center text-sm font-bold text-gray-500 md:px-10 lg:px-20"
-  >
-    AI가 소비 데이터와 설문을 분석하는 중...
-  </section>
+    message="추천 결과 이용 가능 여부를 확인하는 중입니다..."
+  />
+  <RecommendationResultSkeleton
+    v-else-if="isPreparingAccess || isLoadingRecommendations"
+    message="AI가 소비 데이터와 카드 혜택을 맞춰보는 중입니다..."
+  />
   <section v-else class="min-h-screen bg-[#fbf9f8] px-4 py-10 md:px-10 lg:px-20">
     <div class="mx-auto max-w-6xl">
       <header class="max-w-3xl">
@@ -61,26 +57,49 @@
 import { computed, onMounted, ref } from 'vue'
 
 import AnalysisRequirementNotice from '../components/common/AnalysisRequirementNotice.vue'
+import AnalysisAccessSkeleton from '../components/common/AnalysisAccessSkeleton.vue'
 import PrimaryRecommendationCard from '../components/recommendation/PrimaryRecommendationCard.vue'
 import RecommendationAnalysisBars from '../components/recommendation/RecommendationAnalysisBars.vue'
+import RecommendationResultSkeleton from '../components/recommendation/RecommendationResultSkeleton.vue'
 import SecondaryRecommendationList from '../components/recommendation/SecondaryRecommendationList.vue'
 import { useAnalysisAccess } from '../composables/useAnalysisAccess'
 import { cardData } from '../data/cardData'
-import { mockAiRecommendations, mockAiReport } from '../data/mockReportData'
 import { spendingCategories } from '../data/spendingCategoryData'
+import { getApiErrorMessage } from '../services/api'
 import { aiService } from '../services/aiService'
 import { spendingService } from '../services/spendingService'
 import { useCardStore } from '../stores/cardStore'
 import { normalizeRecommendations } from '../utils/normalizeRecommendation'
+import {
+  buildLocalRecommendations,
+  buildSpendingFromBreakdown,
+  buildSpendingFromSurvey,
+  calculateRecommendationScore,
+} from '../utils/recommendationMetrics'
 
 const { authStore, spendingStore, canUseAnalysis, missingRequirements } = useAnalysisAccess()
 const cardStore = useCardStore()
 const isCheckingAccess = ref(true)
+const isPreparingAccess = ref(false)
 const isLoadingRecommendations = ref(false)
 const recommendationError = ref('')
 const recommendations = ref([])
 const aiReport = ref(null)
 const categoryBreakdown = ref([])
+const spendingForScore = computed(() => {
+  if (categoryBreakdown.value.length) {
+    return buildSpendingFromBreakdown(categoryBreakdown.value, spendingStore.latestSurvey)
+  }
+
+  return buildSpendingFromSurvey(aiReport.value?.based_on || spendingStore.latestSurvey)
+})
+const maxMonthlyBenefit = computed(() => {
+  const localRecommendations = buildLocalRecommendations(cardStore.cards, spendingForScore.value, cardStore.cards.length)
+  return Math.max(
+    ...localRecommendations.map((recommendation) => Number(recommendation.expected_monthly_savings || 0)),
+    1,
+  )
+})
 
 const resolvedRecommendations = computed(() =>
   recommendations.value.map((recommendation, index) => {
@@ -88,7 +107,12 @@ const resolvedRecommendations = computed(() =>
     return {
       ...recommendation,
       detail,
-      score: recommendation.score || (index === 0 ? 98 : index === 1 ? 92 : 85),
+      score: calculateRecommendationScore(
+        recommendation,
+        detail,
+        spendingForScore.value,
+        maxMonthlyBenefit.value,
+      ),
       benefitText: getBenefitText(detail),
     }
   }),
@@ -201,6 +225,36 @@ function buildBreakdownFromBasedOn(basedOn = {}) {
     }))
 }
 
+function normalizeCategoryBreakdown(items = []) {
+  return items.map((item) => ({
+    ...item,
+    category: normalizeCategoryKey(item.category),
+    label: getCategoryLabel(item.category),
+  }))
+}
+
+function normalizeCategoryKey(category) {
+  const aliases = {
+    transportation: 'transport',
+    leisure: 'entertainment',
+    culture: 'entertainment',
+    medical: 'health',
+    hospital: 'health',
+    etc: 'other',
+  }
+
+  return aliases[category] || category
+}
+
+function getCategoryLabel(category) {
+  const normalizedCategory = normalizeCategoryKey(category)
+  return (
+    spendingCategories.find((item) => item.category === normalizedCategory)?.label ||
+    normalizedCategory ||
+    '기타'
+  )
+}
+
 async function loadRecommendationData() {
   isLoadingRecommendations.value = true
   recommendationError.value = ''
@@ -213,41 +267,60 @@ async function loadRecommendationData() {
     const params = spendingStore.latestSurvey?.id
       ? { survey_id: spendingStore.latestSurvey.id, top: 5 }
       : { top: 5 }
-    const [recommendationResponse, breakdownResponse] = await Promise.all([
+    const [recommendationResult, breakdownResult] = await Promise.allSettled([
       aiService.fetchRecommendations(params),
-      spendingService.fetchCategoryBreakdown(params).catch(() => null),
+      spendingService.fetchCategoryBreakdown(params),
     ])
 
-    aiReport.value = recommendationResponse?.data || null
-    recommendations.value = normalizeRecommendations(aiReport.value?.recommendations || [])
-    categoryBreakdown.value = breakdownResponse?.data?.breakdown || []
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      aiReport.value = mockAiReport
-      recommendations.value = normalizeRecommendations(mockAiRecommendations)
-      categoryBreakdown.value = mockAiReport.category_breakdown || []
-      return
-    }
+    const recommendationResponse =
+      recommendationResult.status === 'fulfilled' ? recommendationResult.value : null
+    const breakdownResponse = breakdownResult.status === 'fulfilled' ? breakdownResult.value : null
 
+    aiReport.value = recommendationResponse?.data || {
+      based_on: spendingStore.latestSurvey || {},
+      recommendations: [],
+    }
+    categoryBreakdown.value = normalizeCategoryBreakdown(breakdownResponse?.data?.breakdown || [])
+
+    const apiRecommendations = normalizeRecommendations(aiReport.value?.recommendations || [])
+    recommendations.value = apiRecommendations.length
+      ? apiRecommendations
+      : buildLocalRecommendations(cardStore.cards, spendingForScore.value, 5)
+
+    if (!apiRecommendations.length && recommendationResult.status === 'rejected') {
+      recommendationError.value = getApiErrorMessage(
+        recommendationResult.reason,
+        'AI 추천 API를 사용할 수 없어 카드 혜택과 실제 소비 데이터 기준으로 추천을 계산했습니다.',
+      )
+    }
+  } catch (error) {
     aiReport.value = null
-    recommendations.value = []
     categoryBreakdown.value = []
-    recommendationError.value =
-      error?.response?.data?.detail || 'AI 추천 결과를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'
+    recommendations.value = buildLocalRecommendations(
+      cardStore.cards.length ? cardStore.cards : cardData,
+      buildSpendingFromSurvey(spendingStore.latestSurvey),
+      5,
+    )
+    recommendationError.value = getApiErrorMessage(
+      error,
+      'AI 추천 결과를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',
+    )
   } finally {
     isLoadingRecommendations.value = false
   }
 }
 
 onMounted(async () => {
+  isCheckingAccess.value = false
+
   if (authStore.isAuthenticated) {
+    isPreparingAccess.value = true
     await spendingStore.fetchLatestSurvey().catch(() => null)
+    isPreparingAccess.value = false
   }
 
   if (canUseAnalysis.value) {
     await loadRecommendationData()
   }
-
-  isCheckingAccess.value = false
 })
 </script>

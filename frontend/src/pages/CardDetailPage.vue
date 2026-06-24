@@ -1,7 +1,5 @@
 <template>
-  <div v-if="cardStore.isLoading" class="flex min-h-screen items-center justify-center text-zinc-500">
-    카드 정보를 불러오는 중...
-  </div>
+  <CardDetailSkeleton v-if="cardStore.isLoading" />
   <div v-else-if="!card.id" class="flex min-h-screen items-center justify-center text-zinc-500">
     카드를 찾을 수 없습니다.
   </div>
@@ -20,7 +18,13 @@
 
     <CardAiReason
       v-if="!isCheckingAnalysisAccess && canUseAnalysis"
-      :keywords="aiKeywords"
+      :coverage-ratio="spendingAnalysis.coverageRatio"
+      :covered-spending="spendingAnalysis.coveredSpending"
+      :total-spending="spendingAnalysis.totalSpending"
+      :monthly-benefit="spendingAnalysis.monthlyBenefit"
+      :min-prev-month-spending="Number(card.min_prev_month_spending || 0)"
+      :matched-labels="spendingAnalysis.matchedLabels"
+      :insight="spendingAnalysis.insight"
     />
     <AnalysisRequirementNotice
       v-else-if="!isCheckingAnalysisAccess"
@@ -60,11 +64,15 @@ import AnalysisRequirementNotice from '../components/common/AnalysisRequirementN
 import CardAiReason from '../components/cards/CardAiReason.vue'
 import CardBenefitList from '../components/cards/CardBenefitList.vue'
 import CardConditionTable from '../components/cards/CardConditionTable.vue'
+import CardDetailSkeleton from '../components/cards/CardDetailSkeleton.vue'
 import CardDetailHeader from '../components/cards/CardDetailHeader.vue'
 import { SURVEY_PREFERENCE_STORAGE_KEY, useAnalysisAccess } from '../composables/useAnalysisAccess'
 import { getBenefitCategoryLabel } from '../data/benefitData'
+import { getApiErrorMessage } from '../services/api'
+import { spendingService } from '../services/spendingService'
 import { useCardStore } from '../stores/cardStore'
 import { useCompareStore } from '../stores/compareStore'
+import { calculateMonthlyBenefit } from '../utils/calculateBenefit'
 
 const props = defineProps({
   id: {
@@ -83,6 +91,7 @@ const wishlistMessage = ref('')
 const wishlistMessageTone = ref('info')
 const wishlistLoading = ref(false)
 const isCheckingAnalysisAccess = ref(true)
+const categoryBreakdown = ref([])
 
 const card = computed(() => cardStore.selectedCard || {})
 const isWished = computed(() => {
@@ -144,13 +153,63 @@ const conditionRows = [
   },
 ]
 
-const aiKeywords = ['배달 앱', '스트리밍 서비스', '생활비 결제']
+const categoryLabelMap = {
+  food: '식비',
+  transport: '교통',
+  fuel: '주유',
+  shopping: '쇼핑',
+  communication: '통신비',
+  entertainment: '문화/여가',
+  health: '의료/건강',
+  other: '기타',
+}
+
+const surveyFieldByCategory = {
+  food: 'food_monthly',
+  transport: 'transport_monthly',
+  fuel: 'fuel_monthly',
+  shopping: 'shopping_monthly',
+  communication: 'communication_monthly',
+  entertainment: 'entertainment_monthly',
+  health: 'health_monthly',
+  other: 'other_monthly',
+}
+
+const spendingAnalysis = computed(() => {
+  const spending = buildSpendingMap()
+  const totalSpending = Object.values(spending).reduce((sum, amount) => sum + Number(amount || 0), 0)
+  const benefitCategories = new Set(
+    (card.value?.benefits || []).map((benefit) => normalizeBenefitCategory(benefit.benefit_category)),
+  )
+  const matchedItems = Object.entries(spending)
+    .map(([category, amount]) => ({
+      category,
+      amount: Number(amount || 0),
+      label: categoryLabelMap[category] || '기타',
+    }))
+    .filter((item) => benefitCategories.has(item.category) && item.amount > 0)
+    .sort((a, b) => b.amount - a.amount)
+  const coveredSpending = matchedItems.reduce((sum, item) => sum + item.amount, 0)
+  const coverageRatio = totalSpending ? Math.round((coveredSpending / totalSpending) * 100) : 0
+  const monthlyBenefit = calculateMonthlyBenefit(card.value, toSurveySpending(spending))
+  const matchedLabels = matchedItems.map((item) => item.label)
+
+  return {
+    totalSpending,
+    coveredSpending,
+    coverageRatio,
+    monthlyBenefit,
+    matchedLabels,
+    insight: buildAnalysisInsight(matchedLabels, coverageRatio, monthlyBenefit),
+  }
+})
 
 onMounted(async () => {
   if (props.id) cardStore.fetchCardDetail(props.id)
 
   if (authStore.isAuthenticated) {
     await spendingStore.fetchLatestSurvey().catch(() => null)
+    await fetchCategoryBreakdown()
   }
 
   isCheckingAnalysisAccess.value = false
@@ -220,7 +279,7 @@ async function handleToggleWishlist() {
     wishlistMessage.value = '찜 목록에 추가했습니다.'
     wishlistMessageTone.value = 'success'
   } catch (error) {
-    wishlistMessage.value = '찜 처리 중 문제가 발생했습니다.'
+    wishlistMessage.value = getApiErrorMessage(error, '찜 처리 중 문제가 발생했습니다.')
     wishlistMessageTone.value = 'error'
   } finally {
     wishlistLoading.value = false
@@ -247,6 +306,59 @@ function formatBenefitRate(benefit) {
   return `${Number(benefit.discount_rate || 0)}% ${typeLabelMap[benefit.benefit_type] || '할인'}`
 }
 
+async function fetchCategoryBreakdown() {
+  const surveyId = spendingStore.latestSurvey?.id
+  if (!surveyId) {
+    categoryBreakdown.value = []
+    return
+  }
+
+  try {
+    const { data } = await spendingService.fetchCategoryBreakdown({ survey_id: surveyId })
+    categoryBreakdown.value = Array.isArray(data?.breakdown) ? data.breakdown : []
+  } catch (error) {
+    categoryBreakdown.value = []
+  }
+}
+
+function buildSpendingMap() {
+  const spending = Object.keys(categoryLabelMap).reduce((acc, category) => {
+    acc[category] = 0
+    return acc
+  }, {})
+
+  categoryBreakdown.value.forEach((item) => {
+    const category = normalizeBenefitCategory(item.category)
+    if (spending[category] !== undefined) {
+      spending[category] = Number(item.total || 0)
+    }
+  })
+
+  const hasBreakdown = Object.values(spending).some((amount) => amount > 0)
+  if (hasBreakdown) return spending
+
+  Object.entries(surveyFieldByCategory).forEach(([category, field]) => {
+    spending[category] = Number(spendingStore.latestSurvey?.[field] || 0)
+  })
+
+  return spending
+}
+
+function toSurveySpending(spending) {
+  return Object.entries(surveyFieldByCategory).reduce((acc, [category, field]) => {
+    acc[field] = Number(spending[category] || 0)
+    return acc
+  }, {})
+}
+
+function buildAnalysisInsight(labels, coverageRatio, monthlyBenefit) {
+  if (!labels.length) {
+    return '현재 소비 데이터에서 이 카드의 주요 혜택과 직접 겹치는 카테고리가 많지 않습니다. 다른 카드와 함께 비교해 보세요.'
+  }
+
+  return `${labels.slice(0, 2).join('와 ')} 지출이 이 카드의 혜택 영역과 겹칩니다. 전체 소비의 ${coverageRatio}%가 혜택 대상이며, 월 ${formatWon(monthlyBenefit)}원 절약이 예상됩니다.`
+}
+
 function getBenefitIconType(category) {
   const normalizedCategory = normalizeBenefitCategory(category)
   const iconTypes = {
@@ -266,6 +378,7 @@ function getBenefitIconType(category) {
 
 function normalizeBenefitCategory(category) {
   const categoryMap = {
+    transportation: 'transport',
     leisure: 'entertainment',
     culture: 'entertainment',
     medical: 'health',
