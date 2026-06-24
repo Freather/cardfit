@@ -148,3 +148,41 @@ def parse_samsung_csv(file) -> list[dict]:
             continue
 
     return transactions
+
+
+def count_transaction_months(transactions) -> int:
+    months = set()
+    for transaction in transactions:
+        transaction_date = (
+            transaction.get('transaction_date')
+            if isinstance(transaction, dict)
+            else getattr(transaction, 'transaction_date', None)
+        )
+        if transaction_date:
+            months.add((transaction_date.year, transaction_date.month))
+
+    return max(len(months), 1)
+
+
+def build_monthly_average_by_category(transactions) -> dict:
+    transaction_list = list(transactions)
+    month_count = count_transaction_months(transaction_list)
+    category_totals = {}
+
+    for transaction in transaction_list:
+        category = (
+            transaction.get('category')
+            if isinstance(transaction, dict)
+            else getattr(transaction, 'category', 'other')
+        )
+        amount = (
+            transaction.get('amount', 0)
+            if isinstance(transaction, dict)
+            else getattr(transaction, 'amount', 0)
+        )
+        category_totals[category] = category_totals.get(category, 0) + int(amount or 0)
+
+    return {
+        category: round(total / month_count)
+        for category, total in category_totals.items()
+    }

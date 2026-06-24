@@ -12,7 +12,7 @@
         </div>
       </div>
     </div>
-    <p class="mt-8 text-xs text-gray-500">분석 기간: 2024.01.01 ~ 2024.03.31</p>
+    <p class="mt-8 text-xs text-gray-500">분석 기간: {{ periodLabel }}</p>
   </section>
 </template>
 
@@ -21,6 +21,10 @@ defineProps({
   items: {
     type: Array,
     default: () => [],
+  },
+  periodLabel: {
+    type: String,
+    default: '-',
   },
 })
 </script>

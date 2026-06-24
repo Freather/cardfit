@@ -143,8 +143,8 @@ const filteredCards = computed(() => {
   return filtered
 })
 
-onMounted(() => {
-  cardStore.fetchCards()
+onMounted(async () => {
+  await cardStore.fetchCards().catch(() => null)
 })
 
 function createDefaultFilters() {

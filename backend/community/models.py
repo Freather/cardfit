@@ -58,6 +58,10 @@ class Comment(models.Model):
     def __str__(self):
         return f'{self.post.title} - {self.user.email}'
 
+    @property
+    def likes_count(self):
+        return self.likes.count()
+
 
 class PostLike(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
@@ -72,4 +76,20 @@ class PostLike(models.Model):
         db_table = 'community_postlike'
         constraints = [
             models.UniqueConstraint(fields=['post', 'user'], name='unique_post_like'),
+        ]
+
+
+class CommentLike(models.Model):
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='comment_likes',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'community_commentlike'
+        constraints = [
+            models.UniqueConstraint(fields=['comment', 'user'], name='unique_comment_like'),
         ]

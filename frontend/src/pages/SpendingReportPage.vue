@@ -1,8 +1,8 @@
 <template>
   <AnalysisRequirementNotice
     v-if="!isCheckingAccess && !canUseAnalysis"
-    eyebrow="소비 리포트 준비 필요"
-    title="소비 리포트를 보려면 CSV 업로드와 소비 설문이 필요합니다."
+    eyebrow="소비 리포트 준비"
+    title="CSV와 소비 설문을 준비해주세요."
     :missing-requirements="missingRequirements"
   />
   <AnalysisAccessSkeleton
@@ -46,6 +46,7 @@
             :top-category-label="topCategory.label"
             :top-category-ratio="formatRatio(topCategory.ratio)"
             :category-count="displayedCategoryBreakdown.length"
+            :period-label="analysisPeriodLabel"
           />
 
           <SpendingProfileCard
@@ -60,11 +61,22 @@
           :chart-data="doughnutChartData"
           :chart-options="doughnutChartOptions"
           :total-amount-label="formatCurrency(totalCategoryAmount)"
+          @select-category="openCategoryTransactions"
         />
       </template>
 
       <ReportRecommendationCta />
     </div>
+
+    <CategoryTransactionsModal
+      :open="isTransactionModalOpen"
+      :category="selectedTransactionCategory"
+      :transactions="categoryTransactions"
+      :loading="isLoadingTransactions"
+      :error="transactionModalError"
+      :period-label="analysisPeriodLabel"
+      @close="closeCategoryTransactions"
+    />
   </section>
 </template>
 
@@ -74,11 +86,12 @@ import { computed, onMounted, ref } from 'vue'
 import AnalysisRequirementNotice from '../components/common/AnalysisRequirementNotice.vue'
 import AnalysisAccessSkeleton from '../components/common/AnalysisAccessSkeleton.vue'
 import AiReportBox from '../components/report/AiReportBox.vue'
+import CategoryTransactionsModal from '../components/report/CategoryTransactionsModal.vue'
 import ReportRecommendationCta from '../components/report/ReportRecommendationCta.vue'
 import SpendingCategorySection from '../components/report/SpendingCategorySection.vue'
 import SpendingProfileCard from '../components/report/SpendingProfileCard.vue'
 import SpendingReportSkeleton from '../components/report/SpendingReportSkeleton.vue'
-import { useAnalysisAccess } from '../composables/useAnalysisAccess'
+import { SURVEY_PREFERENCE_STORAGE_KEY, useAnalysisAccess } from '../composables/useAnalysisAccess'
 import { mockAiReport } from '../data/mockReportData'
 import { spendingCategories } from '../data/spendingCategoryData'
 import { getApiErrorMessage } from '../services/api'
@@ -89,6 +102,11 @@ const aiReport = ref(mockAiReport)
 const isCheckingAccess = ref(true)
 const isLoadingReport = ref(false)
 const reportError = ref('')
+const isTransactionModalOpen = ref(false)
+const isLoadingTransactions = ref(false)
+const transactionModalError = ref('')
+const selectedTransactionCategory = ref(null)
+const categoryTransactions = ref([])
 const categoryColors = ['#001278', '#2563eb', '#7c3aed', '#db2777', '#f59e0b', '#10b981']
 const categoryMetaMap = Object.fromEntries(spendingCategories.map((category) => [category.category, category]))
 
@@ -164,6 +182,10 @@ const doughnutChartOptions = computed(() => ({
   },
 }))
 const isMockPreview = computed(() => import.meta.env.DEV && authStore.accessToken === 'mock-dev-access-token')
+const analysisPeriodLabel = computed(() => formatPeriodLabel(
+  aiReport.value.survey?.transaction_start_date || latestSurvey.value?.transaction_start_date,
+  aiReport.value.survey?.transaction_end_date || latestSurvey.value?.transaction_end_date,
+))
 
 function formatCurrency(value) {
   return new Intl.NumberFormat('ko-KR', {
@@ -222,7 +244,7 @@ async function loadReportData() {
 
     reportError.value = getApiErrorMessage(
       error,
-      '소비 리포트를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',
+      '소비 리포트를 불러오지 못했어요. 다시 시도해주세요.',
     )
 
     try {
@@ -266,9 +288,11 @@ function normalizeSurveySummary(summary = {}) {
   return {
     id: summary.survey_id || summary.id || null,
     input_type: summary.input_type || 'csv',
-    age_group: summary.age_group || '',
-    income_level: summary.income_level || '',
+    age_group: summary.age_group || latestSurvey.value?.age_group || getSavedSurveyPreference('age_group') || spendingStore.spendingForm.age_group || '',
+    income_level: summary.income_level || latestSurvey.value?.income_level || spendingStore.spendingForm.income_level || '',
     max_annual_fee: summary.max_annual_fee || 0,
+    transaction_start_date: summary.transaction_start_date || latestSurvey.value?.transaction_start_date || '',
+    transaction_end_date: summary.transaction_end_date || latestSurvey.value?.transaction_end_date || '',
     food_monthly: summary.food_monthly ?? categories.food ?? 0,
     transport_monthly: summary.transport_monthly ?? categories.transport ?? 0,
     fuel_monthly: summary.fuel_monthly ?? categories.fuel ?? 0,
@@ -280,6 +304,31 @@ function normalizeSurveySummary(summary = {}) {
     total_monthly: summary.total_monthly || 0,
     created_at: summary.created_at || '',
   }
+}
+
+function getSavedSurveyPreference(key) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SURVEY_PREFERENCE_STORAGE_KEY) || 'null')
+    return saved?.[key] || ''
+  } catch (error) {
+    localStorage.removeItem(SURVEY_PREFERENCE_STORAGE_KEY)
+    return ''
+  }
+}
+
+function formatPeriodLabel(start, end) {
+  if (start && end) return `${formatDate(start)} - ${formatDate(end)}`
+  return '소비 데이터 기준'
+}
+
+function formatDate(value) {
+  if (!value) return '-'
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(value))
 }
 
 function buildBasedOn(survey) {
@@ -348,10 +397,46 @@ function buildCategoryInsight(label, item) {
 function buildSummaryText(breakdown) {
   const topItems = breakdown.slice(0, 2).map((item) => item.label).filter(Boolean)
   if (!topItems.length) {
-    return '아직 분석할 소비 데이터가 부족합니다. CSV 업로드 또는 소비 설문을 완료하면 리포트를 확인할 수 있습니다.'
+    return '소비 데이터를 더 준비하면 리포트를 볼 수 있어요.'
   }
 
   return `최근 소비는 ${topItems.join(', ')} 영역의 비중이 높습니다. 주요 지출 카테고리에 맞춰 혜택이 집중된 카드를 함께 확인해 보세요.`
+}
+
+async function openCategoryTransactions(category) {
+  selectedTransactionCategory.value = category
+  categoryTransactions.value = []
+  transactionModalError.value = ''
+  isTransactionModalOpen.value = true
+
+  if (isMockPreview.value) {
+    categoryTransactions.value = []
+    return
+  }
+
+  isLoadingTransactions.value = true
+
+  try {
+    const surveyId = aiReport.value.survey?.id || latestSurvey.value?.id
+    const params = {
+      category: category.category,
+      ...(surveyId ? { survey_id: surveyId } : {}),
+    }
+    const { data } = await spendingService.fetchTransactions(params)
+    categoryTransactions.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    transactionModalError.value = getApiErrorMessage(
+      error,
+      '소비 내역을 불러오지 못했어요.',
+    )
+  } finally {
+    isLoadingTransactions.value = false
+  }
+}
+
+function closeCategoryTransactions() {
+  isTransactionModalOpen.value = false
+  transactionModalError.value = ''
 }
 
 onMounted(async () => {

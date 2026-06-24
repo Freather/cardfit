@@ -25,6 +25,17 @@
         </span>
       </div>
 
+      <div v-if="actionItems.length" class="mt-7 grid w-full max-w-xl gap-3 text-left">
+        <div
+          v-for="item in actionItems"
+          :key="item.label"
+          class="rounded-lg border border-[#dfe3f1] bg-[#fbfcff] px-4 py-4"
+        >
+          <p class="text-sm font-extrabold text-gray-950">{{ item.title }}</p>
+          <p class="mt-1 text-sm leading-5 text-gray-600">{{ item.description }}</p>
+        </div>
+      </div>
+
       <div class="mt-9 flex flex-wrap justify-center gap-3">
         <RouterLink
           v-if="needsLogin"
@@ -56,15 +67,15 @@ const props = defineProps({
   },
   eyebrow: {
     type: String,
-    default: '분석 준비가 필요합니다',
+    default: '분석을 시작할 준비가 더 필요해요',
   },
   title: {
     type: String,
-    default: '서비스 이용을 위한 정보가 아직 부족합니다.',
+    default: '필요한 정보가 아직 부족해요.',
   },
   description: {
     type: String,
-    default: '소비 리포트, AI 카드 추천, 카드 비교는 로그인 후 CSV 업로드와 소비 설문을 모두 완료해야 이용할 수 있습니다.',
+    default: 'CSV와 소비 설문을 준비하면 분석을 바로 볼 수 있어요.',
   },
   missingRequirements: {
     type: Array,
@@ -74,6 +85,25 @@ const props = defineProps({
 
 const route = useRoute()
 const needsLogin = computed(() => props.missingRequirements.includes('로그인'))
+const actionItems = computed(() =>
+  props.missingRequirements
+    .filter((item) => item !== '로그인')
+    .map((item) => {
+      if (item === '소비 설문') {
+        return {
+          label: item,
+          title: '소비 설문이 필요해요.',
+          description: '선호 카테고리와 받고 싶은 혜택을 알려주세요.',
+        }
+      }
+
+      return {
+        label: item,
+        title: 'CSV 업로드가 필요해요.',
+        description: '카드 소비 내역을 올리면 지출을 분석해드릴게요.',
+      }
+    }),
+)
 const sectionClass = computed(() =>
   props.compact
     ? 'border-b border-zinc-200 bg-white/70 px-5 py-12 md:px-10 lg:px-20'

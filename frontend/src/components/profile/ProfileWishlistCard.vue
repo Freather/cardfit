@@ -37,7 +37,7 @@
         v-if="!cards.length"
         class="rounded-md bg-white/12 px-4 py-8 text-center text-sm font-semibold text-white/60"
       >
-        찜한 카드가 없습니다.
+        찜한 카드가 없어요.
       </div>
     </div>
   </section>

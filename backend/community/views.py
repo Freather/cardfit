@@ -1,12 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 
-from .models import Post, Comment, PostLike
+from .models import Post, Comment, PostLike, CommentLike
 from .serializers import PostListSerializer, PostDetailSerializer, CommentSerializer
 
 
@@ -17,7 +17,7 @@ class PostPagination(PageNumberPagination):
 
 
 class PostListCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
         qs = Post.objects.all()
@@ -43,7 +43,7 @@ class PostListCreateView(APIView):
 
 
 class PostDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def _get_post(self, pk):
         return get_object_or_404(Post, pk=pk)
@@ -71,7 +71,7 @@ class PostDetailView(APIView):
 
 
 class PopularPostListView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         posts = Post.objects.all()
@@ -81,7 +81,7 @@ class PopularPostListView(APIView):
 
 
 class CommentListCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request, pk):
         post = get_object_or_404(Post, pk=pk)
@@ -131,8 +131,26 @@ class PostLikeView(APIView):
         return Response({'liked': True, 'likes_count': post.likes_count})
 
 
-class PostViewView(APIView):
+class CommentLikeView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk, comment_pk):
+        comment = get_object_or_404(Comment, pk=comment_pk, post_id=pk)
+        if comment.user == request.user:
+            return Response(
+                {'detail': '본인 댓글은 추천할 수 없습니다.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        like, created = CommentLike.objects.get_or_create(comment=comment, user=request.user)
+        if not created:
+            like.delete()
+            return Response({'liked': False, 'likes_count': comment.likes_count})
+        return Response({'liked': True, 'likes_count': comment.likes_count})
+
+
+class PostViewView(APIView):
+    permission_classes = [AllowAny]
 
     def post(self, request, pk):
         post = get_object_or_404(Post, pk=pk)

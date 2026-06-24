@@ -20,7 +20,12 @@
             <div
               v-for="category in categories"
               :key="category.category"
-              class="flex items-center justify-between gap-3 rounded-lg bg-[#fbf9f8] px-4 py-3"
+              class="flex items-center justify-between gap-3 rounded-lg bg-[#fbf9f8] px-4 py-3 text-left transition hover:-translate-y-0.5 hover:bg-[#eef1ff] focus:outline-none focus:ring-2 focus:ring-[#001278]/30"
+              role="button"
+              tabindex="0"
+              @click="emit('select-category', category)"
+              @keydown.enter.prevent="emit('select-category', category)"
+              @keydown.space.prevent="emit('select-category', category)"
             >
               <div class="flex min-w-0 items-center gap-2">
                 <span
@@ -38,14 +43,21 @@
       <div class="p-8">
         <div class="mb-6">
           <h2 class="text-xl font-bold text-gray-950">카테고리 상세</h2>
-          <p class="mt-1 text-sm text-gray-500">지출 금액과 분석 코멘트를 확인하세요.</p>
+          <p class="mt-1 text-sm text-gray-500">
+            지출 금액과 분석 코멘트를 확인해보세요. 하단 카테고리를 눌러 내역을 확인할 수 있습니다.
+          </p>
         </div>
 
         <div class="space-y-4">
           <article
             v-for="category in categories"
             :key="`detail-${category.category}`"
-            class="rounded-xl border border-[#e0e0e0] p-5"
+            class="rounded-xl border border-[#e0e0e0] p-5 text-left transition hover:-translate-y-0.5 hover:border-[#001278]/30 hover:shadow-[0_10px_24px_rgba(0,18,120,0.08)] focus:outline-none focus:ring-2 focus:ring-[#001278]/30"
+            role="button"
+            tabindex="0"
+            @click="emit('select-category', category)"
+            @keydown.enter.prevent="emit('select-category', category)"
+            @keydown.space.prevent="emit('select-category', category)"
           >
             <div class="flex items-start justify-between gap-4">
               <div class="flex items-center gap-3">
@@ -91,6 +103,8 @@ defineProps({
     required: true,
   },
 })
+
+const emit = defineEmits(['select-category'])
 
 function formatCurrency(value) {
   return new Intl.NumberFormat('ko-KR', {

@@ -3,10 +3,11 @@
     <div class="grid gap-8 md:grid-cols-[1fr_0.92fr]">
       <div class="flex min-h-72 items-center justify-center rounded-lg bg-gradient-to-br from-[#f4f5f2] via-[#e6ebe9] to-[#cfd8d3] p-8">
         <img
-          v-if="card.image_url"
+          v-if="card.image_url && !imageFailed"
           :src="card.image_url"
           :alt="card.card_name"
           class="max-h-52 w-full max-w-72 object-contain drop-shadow-[0_22px_24px_rgba(0,0,0,0.22)]"
+          @error="imageFailed = true"
         />
         <div
           v-else
@@ -18,11 +19,20 @@
 
       <div class="flex flex-col justify-center">
         <div class="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-[#e7e9ff] px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#001278]">
-          Best Match
-          <span class="normal-case tracking-normal">Match Score {{ recommendation.score }}%</span>
+          최대 절약 추천
+          <span class="normal-case tracking-normal">소비 패턴 적합도 {{ recommendation.score }}%</span>
         </div>
         <p class="text-sm font-bold text-[#001278]">{{ card.card_company || 'CardFit 추천' }}</p>
         <h2 class="mt-1 text-3xl font-extrabold leading-tight text-gray-950">{{ card.card_name }}</h2>
+        <p class="mt-3 rounded-lg border border-[#dfe3ff] bg-white px-4 py-3 text-xs font-bold leading-5 text-gray-600">
+          추천 순위는 예상 절약 금액과 연 순혜택을 우선 반영하고, 소비 패턴 적합도는 혜택 커버 범위와 전월실적 조건까지 함께 봅니다.
+          <span v-if="hasHigherScoreAlternative" class="text-[#001278]">
+            그래서 절약 금액은 이 카드가 더 커도, 다른 카드의 적합도가 더 높게 보일 수 있습니다.
+          </span>
+        </p>
+        <p class="mt-3 rounded-lg bg-[#eef1ff] px-4 py-3 text-xs font-bold leading-5 text-[#001278]">
+          {{ recommendation.scoreReason }}
+        </p>
         <p class="mt-4 text-sm leading-6 text-gray-500">{{ recommendation.reason }}</p>
 
         <div class="mt-6 rounded-lg bg-[#f2eeee] p-6">
@@ -76,9 +86,10 @@
 </template>
 
 <script setup>
+import { ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
-defineProps({
+const props = defineProps({
   recommendation: {
     type: Object,
     required: true,
@@ -91,5 +102,18 @@ defineProps({
     type: Array,
     default: () => [],
   },
+  hasHigherScoreAlternative: {
+    type: Boolean,
+    default: false,
+  },
 })
+
+const imageFailed = ref(false)
+
+watch(
+  () => props.card?.id,
+  () => {
+    imageFailed.value = false
+  },
+)
 </script>

@@ -1,118 +1,132 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+
+import { getApiErrorMessage } from '../services/api'
+import { communityService } from '../services/communityService'
 
 const activeTab = ref('all')
 const keyword = ref('')
 const currentPage = ref(1)
 const postsPerPage = 5
+const posts = ref([])
+const popularPosts = ref([])
+const totalItems = ref(0)
+const isLoading = ref(false)
+const errorMessage = ref('')
 
 const tabs = [
-  { id: 'all', label: '전체' },
-  { id: 'recommend', label: '카드 추천/후기' },
-  { id: 'benefit', label: '혜택 꿀팁' },
-  { id: 'free', label: '자유게시판' },
-  { id: 'question', label: '질문답변' },
+  { id: 'all', label: '전체', apiCategory: '' },
+  { id: 'recommend', label: '카드 추천/후기', apiCategory: 'review' },
+  { id: 'benefit', label: '혜택 꿀팁', apiCategory: 'info' },
+  { id: 'free', label: '자유게시판', apiCategory: 'general' },
+  { id: 'question', label: '질문답변', apiCategory: 'question' },
 ]
 
-const posts = [
-  {
-    id: 1,
-    category: 'recommend',
-    categoryLabel: '카드 추천/후기',
-    time: '어제 21:45',
-    title: '삼성카드 taptap O 실제 사용기 - 스타벅스 50%의 위엄',
-    author: '카드고수김씨',
-    views: 1242,
-    likes: 48,
-    hot: true,
-  },
-  {
-    id: 2,
-    category: 'benefit',
-    categoryLabel: '혜택 꿀팁',
-    time: '어제 18:20',
-    title: '공항 라운지 이용 가능한 체크카드 총정리 (2024년 최신)',
-    author: '여행전문가',
-    views: 3501,
-    likes: 156,
-    hot: true,
-  },
-  {
-    id: 3,
-    category: 'free',
-    categoryLabel: '자유게시판',
-    time: '어제 15:10',
-    title: '이번 달 카드값 실화인가요... 다들 절약 어떻게 하시나요?',
-    author: '절약왕김두리',
-    views: 856,
-    likes: 12,
-  },
-  {
-    id: 4,
-    category: 'question',
-    categoryLabel: '질문답변',
-    time: '어제 12:05',
-    title: '사회초년생 첫 신용카드 추천 부탁드려요! (연봉 3,500 기준)',
-    author: '신입사원A',
-    views: 2110,
-    likes: 22,
-    hot: true,
-  },
-  {
-    id: 5,
-    category: 'recommend',
-    categoryLabel: '카드 추천/후기',
-    time: '어제 09:30',
-    title: '삼성 iD On 카드의 숨겨진 혜택 찾아냈습니다.',
-    author: '데이터마니아',
-    views: 5820,
-    likes: 102,
-    hot: true,
-  },
-]
-
-const popularPosts = [
-  { id: 1, title: '2024년 상반기 알짜 신용카드 TOP 10' },
-  { id: 2, title: '혜택이랑 전월 실적 구조 간단 정리하는 카드들' },
-  { id: 5, title: '삼성카드 포인트 현금화 하는 방법' },
-  { id: 4, title: '혜택별로 사용 가능한 카드 리스트' },
-  { id: 3, title: '무실적 카드 괜찮은 무엇이 있을까요?' },
-]
-
-const filteredPosts = computed(() => {
-  const normalizedKeyword = keyword.value.trim().toLowerCase()
-
-  return posts.filter((post) => {
-    const matchesTab = activeTab.value === 'all' || post.category === activeTab.value
-    const matchesKeyword =
-      !normalizedKeyword ||
-      post.title.toLowerCase().includes(normalizedKeyword) ||
-      post.author.toLowerCase().includes(normalizedKeyword)
-
-    return matchesTab && matchesKeyword
-  })
-})
-
-const totalPages = computed(() => Math.ceil(filteredPosts.value.length / postsPerPage))
+const totalPages = computed(() => Math.max(1, Math.ceil(totalItems.value / postsPerPage)))
 const visiblePages = computed(() => Array.from({ length: totalPages.value }, (_, index) => index + 1))
-const paginatedPosts = computed(() => {
-  const start = (currentPage.value - 1) * postsPerPage
-  return filteredPosts.value.slice(start, start + postsPerPage)
-})
 
-function formatNumber(value) {
-  return Number(value).toLocaleString('ko-KR')
+async function loadPosts() {
+  isLoading.value = true
+  errorMessage.value = ''
+
+  try {
+    const active = tabs.find((tab) => tab.id === activeTab.value)
+    const params = {
+      page: currentPage.value,
+      page_size: postsPerPage,
+    }
+
+    if (active?.apiCategory) params.category = active.apiCategory
+    if (keyword.value.trim()) params.search = keyword.value.trim()
+
+    const { data } = await communityService.fetchPosts(params)
+    const results = Array.isArray(data) ? data : data.results || []
+    posts.value = results.map(normalizePost)
+    totalItems.value = Number(data.count ?? results.length)
+  } catch (error) {
+    posts.value = []
+    totalItems.value = 0
+    errorMessage.value = getApiErrorMessage(error, '글 목록을 불러오지 못했어요.')
+  } finally {
+    isLoading.value = false
+  }
 }
 
-function resetPage() {
+async function loadPopularPosts() {
+  try {
+    const { data } = await communityService.fetchPopularPosts()
+    popularPosts.value = (Array.isArray(data) ? data : []).map(normalizePost).slice(0, 5)
+  } catch {
+    popularPosts.value = []
+  }
+}
+
+async function resetPage() {
   currentPage.value = 1
+  await loadPosts()
 }
 
-function goToPage(page) {
+async function goToPage(page) {
   if (page < 1 || page > totalPages.value) return
   currentPage.value = page
+  await loadPosts()
 }
+
+function normalizePost(post = {}) {
+  const category = toUiCategory(post.category)
+
+  return {
+    id: post.id,
+    category,
+    categoryLabel: getCategoryLabel(category),
+    time: formatDate(post.created_at),
+    title: post.title || '제목 없음',
+    author: formatAuthor(post),
+    views: post.views_count || 0,
+    likes: post.likes_count || 0,
+    comments: post.comments_count || 0,
+    hot: Number(post.likes_count || 0) >= 10 || Number(post.views_count || 0) >= 100,
+  }
+}
+
+function toUiCategory(category) {
+  return {
+    review: 'recommend',
+    info: 'benefit',
+    general: 'free',
+    question: 'question',
+  }[category] || 'free'
+}
+
+function getCategoryLabel(category) {
+  return tabs.find((tab) => tab.id === category)?.label || '자유게시판'
+}
+
+function formatAuthor(post = {}) {
+  if (post.username) return post.username
+  return post.user_email ? post.user_email.split('@')[0] : '익명'
+}
+
+function formatDate(value) {
+  if (!value) return ''
+  return new Intl.DateTimeFormat('ko-KR', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value))
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString('ko-KR')
+}
+
+watch(activeTab, resetPage)
+
+onMounted(async () => {
+  await Promise.all([loadPosts(), loadPopularPosts()])
+})
 </script>
 
 <template>
@@ -126,8 +140,8 @@ function goToPage(page) {
         <div>
           <h1 class="text-4xl font-extrabold tracking-tight text-[#001278]">커뮤니티</h1>
           <p class="mt-4 max-w-md text-base leading-7 text-[#4d5870]">
-            스마트한 카드 생활을 공유하고<br />
-            나에게 꼭 맞는 혜택을 찾아보세요.
+            카드 사용 경험과 혜택 정보를 공유하고<br />
+            나에게 맞는 카드 생활 팁을 찾아보세요.
           </p>
         </div>
 
@@ -142,17 +156,21 @@ function goToPage(page) {
               type="search"
               class="ml-3 h-full w-full bg-transparent text-sm outline-none placeholder:text-[#8b93a7]"
               placeholder="게시글 제목, 내용 검색"
-              @input="resetPage"
+              @keyup.enter="resetPage"
             />
           </label>
+          <button
+            type="button"
+            class="h-12 rounded-md border border-[#cfd4e5] bg-white px-4 text-sm font-bold text-[#001278] transition hover:bg-[#eef1ff]"
+            @click="resetPage"
+          >
+            검색
+          </button>
 
           <RouterLink
             :to="{ name: 'community-write' }"
             class="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#001278] px-8 text-sm font-extrabold text-white transition hover:bg-[#1428a0]"
           >
-            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path d="M14.7 2.3a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4L7.3 15.7 3 17l1.3-4.3L14.7 2.3Z" />
-            </svg>
             글쓰기
           </RouterLink>
         </div>
@@ -160,7 +178,7 @@ function goToPage(page) {
 
       <div class="mt-10 grid gap-7 lg:grid-cols-[1fr_270px]">
         <main>
-          <div class="flex gap-8 border-b border-[#d7dbea]">
+          <div class="flex flex-wrap gap-8 border-b border-[#d7dbea]">
             <button
               v-for="tab in tabs"
               :key="tab.id"
@@ -171,15 +189,22 @@ function goToPage(page) {
                   ? 'border-[#001278] text-[#001278]'
                   : 'border-transparent text-[#6b7280] hover:text-[#001278]'
               "
-              @click="activeTab = tab.id; resetPage()"
+              @click="activeTab = tab.id"
             >
               {{ tab.label }}
             </button>
           </div>
 
           <div class="overflow-hidden rounded-b-lg border border-t-0 border-[#d7dbea] bg-white">
+            <div v-if="isLoading" class="px-5 py-16 text-center text-sm font-semibold text-[#6b7280]">
+              게시글을 불러오는 중입니다...
+            </div>
+            <div v-else-if="errorMessage" class="px-5 py-16 text-center text-sm font-semibold text-red-600">
+              {{ errorMessage }}
+            </div>
             <article
-              v-for="post in paginatedPosts"
+              v-for="post in posts"
+              v-else
               :key="post.id"
               class="flex gap-5 border-b border-[#e4e7f0] px-5 py-5 last:border-b-0"
             >
@@ -207,29 +232,19 @@ function goToPage(page) {
                 </div>
               </div>
 
-              <div class="flex w-24 shrink-0 flex-col items-end justify-center gap-3 text-xs text-[#4d5870]">
-                <span class="inline-flex items-center gap-1">
-                  <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-                    <path d="M2.5 10s2.6-5 7.5-5 7.5 5 7.5 5-2.6 5-7.5 5-7.5-5-7.5-5Z" />
-                    <circle cx="10" cy="10" r="2" />
-                  </svg>
-                  {{ formatNumber(post.views) }}
-                </span>
-                <span class="inline-flex items-center gap-1 font-extrabold text-[#001278]">
-                  <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path d="M10 17s-6.5-3.9-6.5-8.3A3.7 3.7 0 0 1 10 6.2a3.7 3.7 0 0 1 6.5 2.5C16.5 13.1 10 17 10 17Z" />
-                  </svg>
-                  {{ post.likes }}
-                </span>
+              <div class="flex w-28 shrink-0 flex-col items-end justify-center gap-3 text-xs text-[#4d5870]">
+                <span>조회 {{ formatNumber(post.views) }}</span>
+                <span class="font-extrabold text-[#001278]">추천 {{ formatNumber(post.likes) }}</span>
+                <span>댓글 {{ formatNumber(post.comments) }}</span>
               </div>
             </article>
 
-            <div v-if="!filteredPosts.length" class="px-5 py-16 text-center text-sm font-semibold text-[#6b7280]">
-              검색 결과가 없습니다.
+            <div v-if="!isLoading && !errorMessage && !posts.length" class="px-5 py-16 text-center text-sm font-semibold text-[#6b7280]">
+              검색 결과가 없어요.
             </div>
           </div>
 
-          <div v-if="totalPages > 0" class="mt-10 flex justify-center gap-3">
+          <div v-if="totalItems > postsPerPage" class="mt-10 flex justify-center gap-3">
             <button
               type="button"
               class="h-11 w-11 rounded-md border border-[#d7dbea] bg-white text-sm font-extrabold text-[#4d5870] transition hover:border-[#001278] hover:text-[#001278] disabled:cursor-not-allowed disabled:opacity-40"
@@ -267,10 +282,6 @@ function goToPage(page) {
           <section class="rounded-lg border border-[#d7dbea] bg-white p-5">
             <div class="flex items-center justify-between">
               <h2 class="text-lg font-extrabold">인기 게시글</h2>
-              <svg class="h-4 w-4 text-[#001278]" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                <path d="M4 14 8 10l3 3 5-7" />
-                <path d="M13 6h3v3" />
-              </svg>
             </div>
             <ol class="mt-5 grid gap-4">
               <li v-for="(post, index) in popularPosts" :key="post.id" class="flex gap-3">
@@ -282,21 +293,21 @@ function goToPage(page) {
                   >
                     {{ post.title }}
                   </RouterLink>
-                  <p class="mt-1 text-xs text-[#8b93a7]">댓글 {{ 20 - index * 2 }}개</p>
+                  <p class="mt-1 text-xs text-[#8b93a7]">추천 {{ formatNumber(post.likes) }}개</p>
                 </div>
               </li>
+              <li v-if="!popularPosts.length" class="text-sm text-[#8b93a7]">아직 인기 글이 없어요.</li>
             </ol>
           </section>
 
           <RouterLink
             :to="{ name: 'card-detail', params: { id: 2 } }"
             class="group overflow-hidden rounded-lg bg-[#001278] text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
-            aria-label="삼성 iD On 카드 상세 페이지로 이동"
           >
             <div class="flex min-h-[260px] flex-col justify-end bg-[radial-gradient(circle_at_25%_15%,rgba(255,255,255,0.35),transparent_16%),linear-gradient(145deg,#06145c_0%,#001278_55%,#0f2ccc_100%)] p-6">
               <p class="text-xs font-extrabold uppercase tracking-widest text-white/70">Featured Card</p>
               <h2 class="mt-3 text-3xl font-extrabold leading-tight">
-                이번엔 삼성카드<br />
+                삼성카드<br />
                 iD 혜택 총정리
               </h2>
               <span class="mt-6 inline-flex h-10 w-28 items-center justify-center rounded-md bg-white text-sm font-extrabold text-[#001278] transition group-hover:bg-[#eef1ff]">

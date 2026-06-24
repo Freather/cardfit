@@ -80,7 +80,7 @@ async function handleSubmit() {
   errorMessage.value = ''
 
   if (password.value !== passwordConfirm.value) {
-    errorMessage.value = '비밀번호와 비밀번호 확인이 일치하지 않습니다.'
+    errorMessage.value = '비밀번호가 서로 달라요.'
     return
   }
 
@@ -96,7 +96,7 @@ async function handleSubmit() {
   } catch (error) {
     errorMessage.value = getApiErrorMessage(
       error,
-      '회원가입에 실패했습니다. 입력 정보를 확인해 주세요.',
+      '회원가입하지 못했어요. 입력한 내용을 확인해보세요.',
     )
   }
 }

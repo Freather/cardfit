@@ -67,15 +67,15 @@ const missingRequirements = computed(() => {
 const isReady = computed(() => props.isLoggedIn && props.hasSurvey && props.hasCsv)
 
 const statusEyebrow = computed(() => {
-  if (isReady.value) return '분석 준비 완료'
-  if (!props.isLoggedIn) return '로그인이 필요합니다'
-  return '분석 준비가 필요합니다'
+  if (isReady.value) return '분석 준비 끝'
+  if (!props.isLoggedIn) return '로그인해주세요'
+  return '조금만 더 준비해주세요'
 })
 
 const statusTitle = computed(() => {
   if (isReady.value) return `${props.username}님의 맞춤 추천을 준비했어요`
   if (!props.isLoggedIn) return '내 소비 패턴에 맞는 카드를 찾아보세요'
-  return 'CSV 업로드와 소비 설문을 완료해주세요'
+  return 'CSV와 소비 설문을 준비해주세요'
 })
 
 const statusDescription = computed(() => {
@@ -83,9 +83,9 @@ const statusDescription = computed(() => {
     return '업로드한 소비 데이터와 설문 정보를 바탕으로 혜택이 큰 카드를 추천합니다.'
   }
   if (!props.isLoggedIn) {
-    return '로그인하면 소비 설문, CSV 업로드, AI 추천 결과를 한 흐름으로 확인할 수 있습니다.'
+    return '로그인하면 설문부터 AI 추천까지 이어서 볼 수 있어요.'
   }
-  return '소비 리포트와 AI 카드 추천은 CSV 업로드와 소비 설문이 모두 완료되어야 이용할 수 있습니다.'
+  return 'CSV와 소비 설문을 준비하면 리포트와 AI 추천을 볼 수 있어요.'
 })
 
 const actionLabel = computed(() => {

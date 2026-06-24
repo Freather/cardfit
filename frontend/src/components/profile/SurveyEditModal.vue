@@ -10,8 +10,10 @@
     <section class="max-h-[92vh] w-full max-w-[680px] overflow-y-auto rounded-lg bg-white shadow-2xl">
       <div class="flex items-start justify-between gap-4 border-b border-[#ececf2] px-6 py-5">
         <div>
-          <h2 id="survey-edit-title" class="text-xl font-extrabold">소비 설문 재입력</h2>
-          <p class="mt-1 text-sm text-[#4d5870]">소비 패턴과 원하는 혜택을 다시 설정합니다.</p>
+          <h2 id="survey-edit-title" class="text-xl font-extrabold">소비 설문 입력</h2>
+          <p class="mt-1 text-sm text-[#4d5870]">
+            CSV는 실제 소비 내역, 설문은 선호 카테고리와 원하는 혜택을 구분해서 반영합니다.
+          </p>
         </div>
         <button
           type="button"
@@ -28,8 +30,8 @@
 
       <div class="grid gap-8 px-6 py-6">
         <section>
-          <h3 class="text-base font-extrabold">1. 메인 소비 카테고리</h3>
-          <p class="mt-1 text-sm text-[#6b7280]">여러 개를 선택할 수 있습니다.</p>
+          <h3 class="text-base font-extrabold">1. 선호 소비 카테고리</h3>
+          <p class="mt-1 text-sm text-[#6b7280]">내가 혜택을 받고 싶은 영역을 선택해주세요. 여러 개 선택할 수 있습니다.</p>
           <div class="mt-4 grid gap-3 sm:grid-cols-2">
             <button
               v-for="option in categoryOptions"
@@ -59,7 +61,10 @@
         </section>
 
         <section>
-          <h3 class="text-base font-extrabold">2. 평균 월 지출액</h3>
+          <h3 class="text-base font-extrabold">2. 원하는 사용 금액</h3>
+          <p class="mt-1 text-sm text-[#6b7280]">
+            실제 소비 내역은 CSV로 분석하고, 이 금액은 카드 추천 조건과 선호 범위를 잡는 데 사용합니다.
+          </p>
           <div class="mt-4 rounded-lg border border-[#d4d8e8] bg-[#f8f8fb] p-5">
             <input
               :value="form.monthlyAmount"

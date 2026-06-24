@@ -59,6 +59,15 @@
           </tr>
         </tbody>
       </table>
+      <div v-if="loading" class="px-6 py-10 text-center text-sm font-bold text-[#4d5870]">
+        소비 데이터 목록을 불러오는 중입니다...
+      </div>
+      <div v-else-if="error" class="px-6 py-10 text-center text-sm font-bold text-red-600">
+        {{ error }}
+      </div>
+      <div v-else-if="!uploads.length" class="px-6 py-10 text-center text-sm font-bold text-[#6b7280]">
+        아직 소비 데이터가 없어요. CSV를 올려주세요.
+      </div>
     </div>
   </section>
 </template>
@@ -68,6 +77,14 @@ defineProps({
   uploads: {
     type: Array,
     default: () => [],
+  },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  error: {
+    type: String,
+    default: '',
   },
 })
 

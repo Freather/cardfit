@@ -1,8 +1,8 @@
 <template>
   <AnalysisRequirementNotice
-    v-if="!isCheckingAccess && !isPreparingAccess && !canUseAnalysis"
-    eyebrow="AI 카드 추천 준비 필요"
-    title="AI 추천을 받으려면 CSV 업로드와 소비 설문이 필요합니다."
+    v-if="!isCheckingAccess && !canUseAnalysis"
+    eyebrow="AI 추천 준비"
+    title="CSV와 소비 설문을 준비해주세요."
     :missing-requirements="missingRequirements"
   />
   <AnalysisAccessSkeleton
@@ -110,7 +110,7 @@ async function loadAnalysisData() {
 
     analysisError.value = getApiErrorMessage(
       error,
-      '소비 분석 데이터를 불러오지 못했습니다. 설문 데이터 기준으로 표시합니다.',
+      '소비 데이터를 불러오지 못했어요.',
     )
     analysisBreakdown.value = buildItemsFromSurvey(spendingStore.latestSurvey)
   } finally {
@@ -159,13 +159,13 @@ function buildItemsFromSurvey(survey = {}) {
 }
 
 onMounted(async () => {
-  isCheckingAccess.value = false
-
   if (authStore.isAuthenticated) {
     isPreparingAccess.value = true
     await spendingStore.fetchLatestSurvey().catch(() => null)
     isPreparingAccess.value = false
   }
+
+  isCheckingAccess.value = false
 
   if (canUseAnalysis.value) {
     await loadAnalysisData()
