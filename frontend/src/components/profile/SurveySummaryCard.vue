@@ -3,9 +3,12 @@
     <div class="flex items-start justify-between gap-4">
       <div>
         <h2 class="text-lg font-extrabold">최근 소비 설문 요약</h2>
-        <p class="mt-1 text-sm text-[#3b4766]">마지막 참여: {{ updatedAt }}</p>
+        <p class="mt-1 text-sm text-[#3b4766]">
+          {{ hasSurvey ? `마지막 참여: ${updatedAt}` : '아직 설문이 없어요' }}
+        </p>
       </div>
       <RouterLink
+        v-if="hasSurvey"
         :to="{ name: 'report' }"
         class="inline-flex h-11 w-11 items-center justify-center rounded-md bg-[#f5f2f3] text-[#07158f] transition hover:bg-[#eceafa]"
         aria-label="소비 리포트 보기"
@@ -20,13 +23,13 @@
       </RouterLink>
     </div>
 
-    <div class="mt-6 grid gap-5 md:grid-cols-3">
+    <div v-if="hasSurvey" class="mt-6 grid gap-5 md:grid-cols-3">
       <div class="rounded-md bg-[#f5f2f2] px-6 py-6">
         <p class="text-sm text-[#3b4766]">메인 소비 카테고리</p>
         <p class="mt-2 text-base font-extrabold text-[#07158f]">{{ mainCategory }}</p>
       </div>
       <div class="rounded-md bg-[#f5f2f2] px-6 py-6">
-        <p class="text-sm text-[#3b4766]">평균 월 지출액</p>
+        <p class="text-sm text-[#3b4766]">원하는 사용 금액</p>
         <p class="mt-2 text-base font-extrabold text-[#07158f]">{{ monthlyTotalLabel }}</p>
       </div>
       <div class="rounded-md bg-[#f5f2f2] px-6 py-6">
@@ -35,9 +38,13 @@
       </div>
     </div>
 
+    <p v-else class="mt-6 rounded-md bg-[#f5f2f2] px-5 py-5 text-sm font-bold text-[#3b4766]">
+      선호 혜택과 주요 소비 카테고리를 입력하면 소비 리포트와 AI 추천에 반영됩니다.
+    </p>
+
     <button
       type="button"
-      class="mt-7 inline-flex h-[72px] w-full items-center justify-center gap-3 rounded-lg bg-[#07158f] text-base font-extrabold text-white shadow-[0_8px_16px_rgba(7,21,143,0.2)] transition hover:bg-[#111fa3]"
+      class="mt-7 inline-flex h-[72px] w-full items-center justify-center gap-3 rounded-lg bg-[#07158f] text-base font-extrabold text-white shadow-[0_8px_16px_rgba(7,21,143,0.2)] transition hover:-translate-y-0.5 hover:bg-[#1428c8] hover:shadow-[0_16px_30px_rgba(7,21,143,0.32)] focus:outline-none focus:ring-2 focus:ring-[#07158f]/30 focus:ring-offset-2 active:translate-y-0 active:bg-[#06106f]"
       @click="$emit('open-survey')"
     >
       <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -50,7 +57,7 @@
         <path d="m14.95 14.95-2.12-2.12" />
         <path d="m7.17 7.17-2.12-2.12" />
       </svg>
-      소비 설문 재입력
+      {{ hasSurvey ? '소비 설문 재입력' : '소비 설문 입력' }}
     </button>
   </section>
 </template>
@@ -59,6 +66,10 @@
 import { RouterLink } from 'vue-router'
 
 defineProps({
+  hasSurvey: {
+    type: Boolean,
+    default: false,
+  },
   updatedAt: {
     type: String,
     required: true,

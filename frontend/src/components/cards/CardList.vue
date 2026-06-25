@@ -30,7 +30,7 @@
       v-if="cards.length === 0"
       class="mt-4 rounded-xl bg-white p-10 text-center text-sm text-zinc-500 shadow-md shadow-zinc-200/80"
     >
-      조건에 맞는 카드가 없습니다.
+      조건에 맞는 카드가 없어요.
     </div>
   </div>
 </template>

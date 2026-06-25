@@ -8,4 +8,8 @@ export const aiService = {
   recommendFromSpending(payload) {
     return api.post('/api/ai/recommend/', payload)
   },
+
+  chat(payload) {
+    return api.post('/api/ai/chat/', payload)
+  },
 }

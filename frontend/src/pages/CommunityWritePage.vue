@@ -2,6 +2,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+import { getApiErrorMessage } from '../services/api'
+import { communityService } from '../services/communityService'
+
 const router = useRouter()
 
 const form = ref({
@@ -10,6 +13,7 @@ const form = ref({
   content: '',
 })
 const errorMessage = ref('')
+const isSubmitting = ref(false)
 const editorRef = ref(null)
 const isExampleModalOpen = ref(false)
 const insertModal = ref({
@@ -28,9 +32,9 @@ const toolbarState = ref({
 })
 
 const categories = [
-  { value: 'recommend', label: '카드 추천/후기' },
-  { value: 'benefit', label: '혜택 꿀팁' },
-  { value: 'free', label: '자유게시판' },
+  { value: 'review', label: '카드 추천/후기' },
+  { value: 'info', label: '혜택 꿀팁' },
+  { value: 'general', label: '자유게시판' },
   { value: 'question', label: '질문답변' },
 ]
 
@@ -321,7 +325,7 @@ function getEditorText() {
   return editorRef.value?.innerText?.trim() || ''
 }
 
-function submitPost() {
+async function submitPost() {
   syncEditorContent()
 
   if (!form.value.category) {
@@ -340,7 +344,21 @@ function submitPost() {
   }
 
   errorMessage.value = ''
-  router.push({ name: 'community-detail', params: { id: 1 } })
+  isSubmitting.value = true
+
+  try {
+    const { data } = await communityService.createPost({
+      category: form.value.category,
+      title: form.value.title.trim(),
+      content: form.value.content,
+    })
+
+    router.push({ name: 'community-detail', params: { id: data.id } })
+  } catch (error) {
+    errorMessage.value = getApiErrorMessage(error, '글을 올리지 못했어요. 다시 시도해주세요.')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -484,9 +502,10 @@ function submitPost() {
               </button>
               <button
                 type="submit"
-                class="h-11 rounded-md bg-[#001278] px-6 text-sm font-extrabold text-white transition hover:bg-[#1428a0]"
+                class="h-11 rounded-md bg-[#001278] px-6 text-sm font-extrabold text-white transition hover:bg-[#1428a0] disabled:cursor-not-allowed disabled:bg-[#8b93c8]"
+                :disabled="isSubmitting"
               >
-                게시글 등록
+                {{ isSubmitting ? '등록 중...' : '게시글 등록' }}
               </button>
             </div>
           </form>
@@ -622,7 +641,7 @@ function submitPost() {
               {{ insertModal.type === 'link' ? '링크 삽입' : '이미지 삽입' }}
             </h2>
             <p class="mt-1 text-sm text-[#4d5870]">
-              {{ insertModal.type === 'link' ? '연결할 웹 주소를 입력해주세요.' : '본문에 넣을 이미지 주소를 입력해주세요.' }}
+              {{ insertModal.type === 'link' ? '웹 주소를 입력해주세요.' : '이미지 주소를 입력해주세요.' }}
             </p>
           </div>
           <button

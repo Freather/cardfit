@@ -50,6 +50,26 @@
               readonly
             />
           </label>
+
+          <label class="grid gap-2">
+            <span class="text-sm font-extrabold text-[#30374d]">연령대</span>
+            <select
+              :value="form.age_group"
+              class="h-12 rounded-md border border-[#d4d8e8] bg-white px-4 text-sm font-semibold text-[#121212] outline-none transition focus:border-[#07158f] focus:ring-2 focus:ring-[#07158f]/10"
+              @change="updateField('age_group', $event.target.value)"
+            >
+              <option
+                v-for="option in ageOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+            <span class="text-xs font-semibold text-[#6b7280]">
+              소비 리포트의 소비 성향 분석에도 함께 반영됩니다.
+            </span>
+          </label>
         </div>
 
         <p v-if="error" class="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
@@ -86,6 +106,10 @@ const props = defineProps({
     required: true,
   },
   saving: Boolean,
+  ageOptions: {
+    type: Array,
+    default: () => [],
+  },
   error: {
     type: String,
     default: '',

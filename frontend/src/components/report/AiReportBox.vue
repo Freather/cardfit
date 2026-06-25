@@ -4,6 +4,7 @@
       <div>
         <p class="text-sm font-semibold text-[#001278]">AI 분석 요약</p>
         <h2 class="mt-2 text-2xl font-bold text-gray-950">생활 할인형 카드가 가장 유리합니다</h2>
+        <p class="mt-2 text-xs font-bold text-gray-500">분석 기간: {{ periodLabel }}</p>
         <p class="mt-4 max-w-3xl text-sm leading-6 text-gray-600">{{ summary }}</p>
       </div>
       <div class="rounded-2xl bg-[#001278] px-5 py-4 text-white">
@@ -50,6 +51,10 @@ defineProps({
   categoryCount: {
     type: Number,
     default: 0,
+  },
+  periodLabel: {
+    type: String,
+    default: '-',
   },
 })
 </script>

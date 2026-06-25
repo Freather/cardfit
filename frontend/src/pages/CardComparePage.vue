@@ -1,8 +1,8 @@
 <template>
   <AnalysisRequirementNotice
     v-if="!isCheckingAccess && !canUseAnalysis"
-    eyebrow="카드 비교 준비 필요"
-    title="카드 비교를 이용하려면 CSV 업로드와 소비 설문이 필요합니다."
+    eyebrow="카드 비교 준비"
+    title="CSV와 소비 설문을 준비해주세요."
     :missing-requirements="missingRequirements"
   />
   <AnalysisAccessSkeleton
@@ -94,7 +94,7 @@ onMounted(async () => {
   }
 
   if (!cardStore.cards.length) {
-    await cardStore.fetchCards()
+    await cardStore.fetchCards().catch(() => null)
   }
 
   isCheckingAccess.value = false

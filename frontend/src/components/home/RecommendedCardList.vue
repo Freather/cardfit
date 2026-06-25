@@ -2,8 +2,8 @@
   <section>
     <div class="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
       <div>
-        <h2 class="text-xl font-extrabold text-gray-950">{{ title }}</h2>
-        <p class="mt-1 text-sm text-gray-500">{{ description }}</p>
+        <h2 class="text-xl font-extrabold text-gray-950">카드 추천 라인업</h2>
+        <p class="mt-1 text-sm text-gray-500">다양한 혜택의 카드를 먼저 둘러보세요.</p>
       </div>
       <RouterLink
         :to="{ name: 'cards' }"
@@ -28,12 +28,6 @@
               class="h-full w-full object-contain p-2"
             />
             <span v-else class="text-xs text-gray-400">카드 이미지</span>
-            <span
-              v-if="card.rank"
-              class="absolute left-3 top-3 rounded-md bg-[#001278] px-2 py-1 text-xs font-bold text-white"
-            >
-              추천 {{ card.rank }}위
-            </span>
           </div>
 
           <h3 class="text-lg font-extrabold text-gray-950">{{ card.name }}</h3>
@@ -55,24 +49,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-const props = defineProps({
+defineProps({
   cards: {
     type: Array,
     default: () => [],
   },
-  hasRecommendations: {
-    type: Boolean,
-    default: false,
-  },
 })
-
-const title = computed(() => (props.hasRecommendations ? 'AI 추천 카드 TOP 3' : '카드 추천 라인업'))
-const description = computed(() =>
-  props.hasRecommendations
-    ? '내 소비 패턴 기반 예상 혜택 순으로 정리했습니다.'
-    : '다양한 혜택의 카드를 먼저 둘러보세요.',
-)
 </script>

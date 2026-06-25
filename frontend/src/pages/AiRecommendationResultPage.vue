@@ -1,8 +1,8 @@
 <template>
   <AnalysisRequirementNotice
-    v-if="!isCheckingAccess && !isPreparingAccess && !canUseAnalysis"
-    eyebrow="AI 카드 추천 준비 필요"
-    title="AI 추천 결과를 보려면 CSV 업로드와 소비 설문이 필요합니다."
+    v-if="!isCheckingAccess && !canUseAnalysis"
+    eyebrow="AI 추천 준비"
+    title="CSV와 소비 설문을 준비해주세요."
     :missing-requirements="missingRequirements"
   />
   <AnalysisAccessSkeleton
@@ -36,17 +36,18 @@
           :recommendation="primaryRecommendation"
           :card="primaryCard"
           :benefits="primaryBenefits"
+          :has-higher-score-alternative="hasHigherScoreAlternative"
         />
         <div
           v-else
           class="rounded-xl border border-[#e5e0dd] bg-white p-8 text-sm font-bold text-gray-500 shadow-[0_18px_52px_rgba(0,18,120,0.08)]"
         >
-          추천 결과가 없습니다. 소비 설문과 CSV 업로드 상태를 다시 확인해 주세요.
+          추천 결과를 만들지 못했어요. 입력 상태를 확인해보세요.
         </div>
 
         <aside class="space-y-7">
           <SecondaryRecommendationList :cards="secondaryCards" />
-          <RecommendationAnalysisBars :items="analysisBars" />
+          <RecommendationAnalysisBars :items="analysisBars" :period-label="analysisPeriodLabel" />
         </aside>
       </div>
     </div>
@@ -63,7 +64,6 @@ import RecommendationAnalysisBars from '../components/recommendation/Recommendat
 import RecommendationResultSkeleton from '../components/recommendation/RecommendationResultSkeleton.vue'
 import SecondaryRecommendationList from '../components/recommendation/SecondaryRecommendationList.vue'
 import { useAnalysisAccess } from '../composables/useAnalysisAccess'
-import { cardData } from '../data/cardData'
 import { spendingCategories } from '../data/spendingCategoryData'
 import { getApiErrorMessage } from '../services/api'
 import { aiService } from '../services/aiService'
@@ -74,6 +74,7 @@ import {
   buildLocalRecommendations,
   buildSpendingFromBreakdown,
   buildSpendingFromSurvey,
+  buildScoreReason,
   calculateRecommendationScore,
 } from '../utils/recommendationMetrics'
 
@@ -86,6 +87,7 @@ const recommendationError = ref('')
 const recommendations = ref([])
 const aiReport = ref(null)
 const categoryBreakdown = ref([])
+const analysisPeriod = ref({ start: '', end: '' })
 const spendingForScore = computed(() => {
   if (categoryBreakdown.value.length) {
     return buildSpendingFromBreakdown(categoryBreakdown.value, spendingStore.latestSurvey)
@@ -93,14 +95,6 @@ const spendingForScore = computed(() => {
 
   return buildSpendingFromSurvey(aiReport.value?.based_on || spendingStore.latestSurvey)
 })
-const maxMonthlyBenefit = computed(() => {
-  const localRecommendations = buildLocalRecommendations(cardStore.cards, spendingForScore.value, cardStore.cards.length)
-  return Math.max(
-    ...localRecommendations.map((recommendation) => Number(recommendation.expected_monthly_savings || 0)),
-    1,
-  )
-})
-
 const resolvedRecommendations = computed(() =>
   recommendations.value.map((recommendation, index) => {
     const detail = findCardDetail(recommendation)
@@ -111,7 +105,12 @@ const resolvedRecommendations = computed(() =>
         recommendation,
         detail,
         spendingForScore.value,
-        maxMonthlyBenefit.value,
+      ),
+      scoreReason: recommendation.score_reason || buildScoreReason(
+        detail,
+        spendingForScore.value,
+        recommendation.expected_monthly_savings,
+        recommendation.net_benefit,
       ),
       benefitText: getBenefitText(detail),
     }
@@ -121,7 +120,14 @@ const resolvedRecommendations = computed(() =>
 const primaryRecommendation = computed(() => resolvedRecommendations.value[0] || null)
 const primaryCard = computed(() => primaryRecommendation.value?.detail || {})
 const secondaryCards = computed(() => resolvedRecommendations.value.slice(1, 3))
+const hasHigherScoreAlternative = computed(() =>
+  secondaryCards.value.some((card) => Number(card.score || 0) > Number(primaryRecommendation.value?.score || 0)),
+)
 const strongestCategoryLabel = computed(() => analysisBars.value[0]?.label || '주요 소비')
+const analysisPeriodLabel = computed(() => formatPeriodLabel(
+  analysisPeriod.value.start || spendingStore.latestCsvSurvey?.transaction_start_date,
+  analysisPeriod.value.end || spendingStore.latestCsvSurvey?.transaction_end_date,
+))
 const analysisBars = computed(() => {
   const items = categoryBreakdown.value.length
     ? categoryBreakdown.value
@@ -179,7 +185,7 @@ const benefitTypeMap = {
 
 function findCardDetail(recommendation) {
   const normalizedName = normalizeCardName(recommendation.card_name)
-  const cards = cardStore.cards.length ? cardStore.cards : cardData
+  const cards = cardStore.cards
   const byId = cards.find((card) => String(card.id) === String(recommendation.card_id))
   const byName = cards.find((card) => normalizeCardName(card.card_name) === normalizedName)
 
@@ -255,6 +261,21 @@ function getCategoryLabel(category) {
   )
 }
 
+function formatPeriodLabel(start, end) {
+  if (start && end) return `${formatDate(start)} - ${formatDate(end)}`
+  return '소비 데이터 기준'
+}
+
+function formatDate(value) {
+  if (!value) return '-'
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(value))
+}
+
 async function loadRecommendationData() {
   isLoadingRecommendations.value = true
   recommendationError.value = ''
@@ -264,8 +285,9 @@ async function loadRecommendationData() {
       await cardStore.fetchCards()
     }
 
-    const params = spendingStore.latestSurvey?.id
-      ? { survey_id: spendingStore.latestSurvey.id, top: 5 }
+    const csvSurveyId = spendingStore.latestCsvSurvey?.id || spendingStore.analysisStatus.latest_csv_id
+    const params = csvSurveyId
+      ? { survey_id: csvSurveyId, top: 5 }
       : { top: 5 }
     const [recommendationResult, breakdownResult] = await Promise.allSettled([
       aiService.fetchRecommendations(params),
@@ -280,44 +302,86 @@ async function loadRecommendationData() {
       based_on: spendingStore.latestSurvey || {},
       recommendations: [],
     }
-    categoryBreakdown.value = normalizeCategoryBreakdown(breakdownResponse?.data?.breakdown || [])
+    const breakdownData = breakdownResponse?.data || {}
+    categoryBreakdown.value = normalizeCategoryBreakdown(breakdownData.breakdown || [])
+    analysisPeriod.value = {
+      start: breakdownData.transaction_start_date || aiReport.value?.transaction_start_date || '',
+      end: breakdownData.transaction_end_date || aiReport.value?.transaction_end_date || '',
+    }
 
     const apiRecommendations = normalizeRecommendations(aiReport.value?.recommendations || [])
-    recommendations.value = apiRecommendations.length
-      ? apiRecommendations
-      : buildLocalRecommendations(cardStore.cards, spendingForScore.value, 5)
+    recommendations.value = buildReliableRecommendations(apiRecommendations)
 
     if (!apiRecommendations.length && recommendationResult.status === 'rejected') {
       recommendationError.value = getApiErrorMessage(
         recommendationResult.reason,
-        'AI 추천 API를 사용할 수 없어 카드 혜택과 실제 소비 데이터 기준으로 추천을 계산했습니다.',
+        'AI 추천을 불러오지 못했어요. 카드 혜택 기준으로 계산했어요.',
       )
     }
   } catch (error) {
     aiReport.value = null
     categoryBreakdown.value = []
+    analysisPeriod.value = {
+      start: spendingStore.latestCsvSurvey?.transaction_start_date || '',
+      end: spendingStore.latestCsvSurvey?.transaction_end_date || '',
+    }
     recommendations.value = buildLocalRecommendations(
-      cardStore.cards.length ? cardStore.cards : cardData,
+      cardStore.cards,
       buildSpendingFromSurvey(spendingStore.latestSurvey),
       5,
     )
     recommendationError.value = getApiErrorMessage(
       error,
-      'AI 추천 결과를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',
+      'AI 추천을 불러오지 못했어요. 다시 시도해주세요.',
     )
   } finally {
     isLoadingRecommendations.value = false
   }
 }
 
-onMounted(async () => {
-  isCheckingAccess.value = false
+function buildReliableRecommendations(apiRecommendations = []) {
+  const localRecommendations = buildLocalRecommendations(
+    cardStore.cards,
+    spendingForScore.value,
+    5,
+  )
 
+  if (!apiRecommendations.length || !localRecommendations.length) return localRecommendations
+
+  return localRecommendations.map((localRecommendation, index) => {
+    const matchedAiRecommendation = findMatchingAiRecommendation(localRecommendation, apiRecommendations)
+
+    return {
+      ...localRecommendation,
+      rank: index + 1,
+      reason: matchedAiRecommendation?.reason || localRecommendation.reason,
+      isScoreLocked: true,
+    }
+  })
+}
+
+function findMatchingAiRecommendation(localRecommendation, apiRecommendations = []) {
+  const localDetail = findCardDetail(localRecommendation)
+  const localId = String(localDetail?.id || localRecommendation.card_id || '')
+  const localName = normalizeCardName(localDetail?.card_name || localRecommendation.card_name)
+
+  return apiRecommendations.find((apiRecommendation) => {
+    const apiDetail = findCardDetail(apiRecommendation)
+    const apiId = String(apiDetail?.id || apiRecommendation.card_id || '')
+    const apiName = normalizeCardName(apiDetail?.card_name || apiRecommendation.card_name)
+
+    return (localId && apiId && localId === apiId) || (localName && apiName && localName === apiName)
+  })
+}
+
+onMounted(async () => {
   if (authStore.isAuthenticated) {
     isPreparingAccess.value = true
     await spendingStore.fetchLatestSurvey().catch(() => null)
     isPreparingAccess.value = false
   }
+
+  isCheckingAccess.value = false
 
   if (canUseAnalysis.value) {
     await loadRecommendationData()

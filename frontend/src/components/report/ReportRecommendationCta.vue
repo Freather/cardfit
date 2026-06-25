@@ -1,8 +1,8 @@
 <template>
   <section class="py-10 text-center">
-    <h2 class="text-xl font-bold text-gray-950">분석 결과를 바탕으로 최적의 카드를 확인해볼까요?</h2>
+    <h2 class="text-xl font-bold text-gray-950">내 소비에 맞는 카드를 확인해보세요.</h2>
     <p class="mt-2 text-sm text-gray-500">
-      CardFit AI가 고객님의 소비 패턴에 맞는 혜택을 실시간으로 계산했습니다.
+      CardFit AI가 소비 패턴에 맞는 혜택을 계산했어요.
     </p>
     <RouterLink
       :to="{ name: 'ai-recommendations' }"

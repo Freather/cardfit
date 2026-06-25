@@ -3,10 +3,13 @@
     <div class="flex min-h-[210px] flex-col items-center justify-center text-center">
       <h1 class="text-xl font-extrabold">{{ name }}</h1>
       <p class="mt-2 text-sm text-[#3b4766]">{{ email }}</p>
+      <p class="mt-3 inline-flex items-center rounded-full bg-[#eef1ff] px-3 py-1 text-xs font-extrabold text-[#06198f]">
+        연령대 {{ ageLabel }}
+      </p>
 
       <button
         type="button"
-        class="mt-11 inline-flex items-center gap-2 text-sm font-bold text-[#06198f]"
+        class="mt-8 inline-flex items-center gap-2 rounded-md border border-[#cfd5ff] bg-[#eef1ff] px-4 py-2 text-sm font-extrabold text-[#06198f] shadow-sm transition hover:-translate-y-0.5 hover:border-[#06198f] hover:bg-[#06198f] hover:text-white hover:shadow-[0_10px_22px_rgba(6,25,143,0.22)] focus:outline-none focus:ring-2 focus:ring-[#06198f]/30 active:translate-y-0 active:shadow-sm"
         @click="$emit('edit')"
       >
         <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -41,6 +44,10 @@ defineProps({
     required: true,
   },
   email: {
+    type: String,
+    required: true,
+  },
+  ageLabel: {
     type: String,
     required: true,
   },

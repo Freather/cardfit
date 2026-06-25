@@ -44,8 +44,8 @@ export function useAnalysisAccess() {
   const { authStore, isLoggedIn, ensureProfile } = useAuthState()
   const spendingStore = useSpendingStore()
 
-  const hasSurvey = computed(() => Boolean(spendingStore.latestSurvey) || hasSavedSurveyPreferences())
-  const hasCsv = computed(() => hasSavedCsvUpload())
+  const hasSurvey = computed(() => Boolean(spendingStore.analysisStatus.has_survey))
+  const hasCsv = computed(() => Boolean(spendingStore.analysisStatus.has_csv))
   const canUseAnalysis = computed(() => isLoggedIn.value && hasSurvey.value && hasCsv.value)
   const missingRequirements = computed(() => {
     const requirements = []

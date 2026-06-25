@@ -13,7 +13,7 @@ from .serializers import (
     SpendingTransactionCreateSerializer,
     CSVUploadSerializer,
 )
-from .utils import parse_samsung_csv
+from .utils import build_monthly_average_by_category, parse_samsung_csv
 
 
 # ─── /api/spending/ ────────────────────────────────────────────────────────────
@@ -79,10 +79,7 @@ class SpendingCSVUploadView(APIView):
         if not parsed:
             return Response({'detail': '유효한 거래 내역이 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        category_totals = {}
-        for tx in parsed:
-            cat = tx['category']
-            category_totals[cat] = category_totals.get(cat, 0) + tx['amount']
+        category_totals = build_monthly_average_by_category(parsed)
 
         # 설문 정보 추출 (요청에서 제공되지 않으면 기본값 사용)
         age_group = file_serializer.validated_data.get('age_group', '30s')
@@ -123,12 +120,13 @@ class SpendingStatusView(APIView):
 
     def get(self, request):
         surveys = UserSurvey.objects.filter(user=request.user)
-        latest = surveys.first()
-        has_csv = surveys.filter(input_type='csv').exists()
+        latest_manual = surveys.filter(input_type='manual').first()
+        latest_csv = surveys.filter(input_type='csv').first()
         return Response({
-            'has_survey': surveys.exists(),
-            'has_csv': has_csv,
-            'latest_survey_id': latest.id if latest else None,
+            'has_survey': latest_manual is not None,
+            'has_csv': latest_csv is not None,
+            'latest_survey_id': latest_manual.id if latest_manual else None,
+            'latest_csv_id': latest_csv.id if latest_csv else None,
         })
 
 

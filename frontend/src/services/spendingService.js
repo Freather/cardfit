@@ -5,6 +5,10 @@ export const spendingService = {
     return api.get('/api/spending/')
   },
 
+  fetchStatus() {
+    return api.get('/api/spending/status/')
+  },
+
   createSurvey(payload) {
     return api.post('/api/spending/', payload)
   },

@@ -7,6 +7,13 @@ import { spendingService } from '../services/spendingService'
 export const useSpendingStore = defineStore('spending', () => {
   const spendingForm = ref({ ...defaultSpendingForm })
   const latestSurvey = ref(null)
+  const latestCsvSurvey = ref(null)
+  const analysisStatus = ref({
+    has_survey: false,
+    has_csv: false,
+    latest_survey_id: null,
+    latest_csv_id: null,
+  })
   const reportData = ref(null)
   const isLoading = ref(false)
   const error = ref(null)
@@ -34,6 +41,11 @@ export const useSpendingStore = defineStore('spending', () => {
     try {
       const { data } = await spendingService.createSurvey(payload)
       latestSurvey.value = data
+      analysisStatus.value = {
+        ...analysisStatus.value,
+        has_survey: true,
+        latest_survey_id: data?.id || analysisStatus.value.latest_survey_id,
+      }
       return data
     } catch (err) {
       error.value = err
@@ -64,7 +76,12 @@ export const useSpendingStore = defineStore('spending', () => {
       }
       const response = await spendingService.uploadCsv(file, surveyData)
       const data = response?.data ?? null
-      latestSurvey.value = data?.survey || latestSurvey.value
+      latestCsvSurvey.value = data?.survey || latestCsvSurvey.value
+      analysisStatus.value = {
+        ...analysisStatus.value,
+        has_csv: true,
+        latest_csv_id: data?.survey?.id || analysisStatus.value.latest_csv_id,
+      }
       return data
     } catch (err) {
       error.value = err
@@ -80,7 +97,15 @@ export const useSpendingStore = defineStore('spending', () => {
 
     try {
       const { data } = await spendingService.fetchLatestSurvey()
-      latestSurvey.value = Array.isArray(data) && data.length ? data[0] : null
+      const surveys = Array.isArray(data) ? data : []
+      latestSurvey.value = surveys.find((survey) => survey.input_type === 'manual') || null
+      latestCsvSurvey.value = surveys.find((survey) => survey.input_type === 'csv') || null
+      analysisStatus.value = {
+        has_survey: Boolean(latestSurvey.value),
+        has_csv: Boolean(latestCsvSurvey.value),
+        latest_survey_id: latestSurvey.value?.id || null,
+        latest_csv_id: latestCsvSurvey.value?.id || null,
+      }
       return latestSurvey.value
     } catch (err) {
       error.value = err
@@ -88,6 +113,28 @@ export const useSpendingStore = defineStore('spending', () => {
       throw err
     } finally {
       isLoading.value = false
+    }
+  }
+
+  async function fetchAnalysisStatus() {
+    try {
+      const { data } = await spendingService.fetchStatus()
+      analysisStatus.value = {
+        has_survey: Boolean(data?.has_survey),
+        has_csv: Boolean(data?.has_csv),
+        latest_survey_id: data?.latest_survey_id || null,
+        latest_csv_id: data?.latest_csv_id || null,
+      }
+      return analysisStatus.value
+    } catch (err) {
+      error.value = err
+      analysisStatus.value = {
+        has_survey: Boolean(latestSurvey.value),
+        has_csv: Boolean(latestCsvSurvey.value),
+        latest_survey_id: latestSurvey.value?.id || null,
+        latest_csv_id: latestCsvSurvey.value?.id || null,
+      }
+      throw err
     }
   }
 
@@ -122,6 +169,8 @@ export const useSpendingStore = defineStore('spending', () => {
   return {
     spendingForm,
     latestSurvey,
+    latestCsvSurvey,
+    analysisStatus,
     reportData,
     isLoading,
     error,
@@ -131,6 +180,7 @@ export const useSpendingStore = defineStore('spending', () => {
     createSurvey,
     uploadCsv,
     fetchLatestSurvey,
+    fetchAnalysisStatus,
     fetchReportData,
   }
 })

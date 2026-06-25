@@ -5,7 +5,7 @@ export const TOKEN_STORAGE_KEYS = {
   refresh: 'cardfit_refresh_token',
 }
 
-const DEFAULT_ERROR_MESSAGE = '요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+const DEFAULT_ERROR_MESSAGE = '잠시 후 다시 시도해주세요.'
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
@@ -79,11 +79,11 @@ export function getApiErrorMessage(error, fallback = DEFAULT_ERROR_MESSAGE) {
   }
 
   if (error.code === 'ECONNABORTED') {
-    return '요청 시간이 초과되었습니다. 네트워크 상태를 확인한 뒤 다시 시도해 주세요.'
+    return '응답이 늦어지고 있어요. 잠시 후 다시 시도해주세요.'
   }
 
   if (error.request && !error.response) {
-    return '서버에 연결할 수 없습니다. 백엔드 서버 실행 상태와 네트워크를 확인해 주세요.'
+    return '서버와 연결되지 않았어요. 실행 상태를 확인해보세요.'
   }
 
   const errorData = error.response?.data
@@ -91,19 +91,19 @@ export function getApiErrorMessage(error, fallback = DEFAULT_ERROR_MESSAGE) {
   if (parsedMessage) return parsedMessage
 
   if (error.response?.status === 401) {
-    return '로그인이 만료되었습니다. 다시 로그인해 주세요.'
+    return '로그인이 끝났어요. 다시 로그인해주세요.'
   }
 
   if (error.response?.status === 403) {
-    return '요청 권한이 없습니다.'
+    return '지금 계정으로는 할 수 없어요.'
   }
 
   if (error.response?.status === 404) {
-    return '요청한 데이터를 찾을 수 없습니다.'
+    return '데이터를 찾지 못했어요.'
   }
 
   if (error.response?.status >= 500) {
-    return '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+    return '서버가 잠시 불안정해요. 다시 시도해주세요.'
   }
 
   return fallback

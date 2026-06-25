@@ -1,7 +1,7 @@
 <template>
   <CardDetailSkeleton v-if="cardStore.isLoading" />
   <div v-else-if="!card.id" class="flex min-h-screen items-center justify-center text-zinc-500">
-    카드를 찾을 수 없습니다.
+    카드를 찾지 못했어요.
   </div>
   <div v-else class="min-h-screen bg-[#faf9f8] text-zinc-950">
     <CardDetailHeader
@@ -29,9 +29,9 @@
     <AnalysisRequirementNotice
       v-else-if="!isCheckingAnalysisAccess"
       compact
-      eyebrow="AI 맞춤 추천 사유 준비 필요"
-      title="AI 맞춤 추천 사유를 보려면 CSV 업로드와 소비 설문이 필요합니다."
-      description="카드 상세의 AI 추천 사유는 CSV 소비 데이터와 설문을 함께 분석한 뒤 제공됩니다. 마이페이지에서 두 항목을 완료해 주세요."
+      eyebrow="AI 추천 사유 준비"
+      title="CSV와 소비 설문을 준비해주세요."
+      description="두 가지를 준비하면 이 카드가 맞는 이유를 알려드릴게요."
       :missing-requirements="missingRequirements"
     />
 
@@ -119,6 +119,7 @@ const detailBenefits = computed(() => {
 
   return baseBenefits.map((benefit) => {
     const category = normalizeBenefitCategory(benefit.benefit_category)
+    const isPreferenceMatch = hasPreferredMatch && preferredBenefitCategories.value.has(category)
 
     return {
       id: benefit.id,
@@ -129,7 +130,8 @@ const detailBenefits = computed(() => {
       description: benefit.condition_description || '주요 생활 영역 혜택',
       limit: benefit.monthly_limit ? `최대 ${formatWon(benefit.monthly_limit)}원` : '제한 없음',
       condition: formatPrevSpending(card.value.min_prev_month_spending),
-      tone: hasPreferredMatch && preferredBenefitCategories.value.has(category) ? 'blue' : 'light',
+      tone: isPreferenceMatch ? 'blue' : 'light',
+      isPreferenceMatch,
     }
   })
 })
@@ -149,7 +151,7 @@ const conditionRows = [
   },
   {
     label: '포인트 유효기간',
-    value: '적립 포인트는 카드사 정책에 따라 일정 기간 이후 소멸될 수 있으므로 상세 약관을 확인해주세요.',
+    value: '포인트는 기간이 지나면 사라질 수 있어요. 자세한 내용은 약관에서 확인해보세요.',
   },
 ]
 
@@ -205,7 +207,7 @@ const spendingAnalysis = computed(() => {
 })
 
 onMounted(async () => {
-  if (props.id) cardStore.fetchCardDetail(props.id)
+  if (props.id) await cardStore.fetchCardDetail(props.id).catch(() => null)
 
   if (authStore.isAuthenticated) {
     await spendingStore.fetchLatestSurvey().catch(() => null)
@@ -217,8 +219,8 @@ onMounted(async () => {
 
 watch(
   () => props.id,
-  (id) => {
-    if (id) cardStore.fetchCardDetail(id)
+  async (id) => {
+    if (id) await cardStore.fetchCardDetail(id).catch(() => null)
   },
 )
 
@@ -246,12 +248,12 @@ function handleAddCompare() {
   const added = compareStore.addCard(card.value)
 
   if (!added) {
-    compareMessage.value = '카드 비교는 최대 3개까지만 담을 수 있습니다.'
+    compareMessage.value = '카드는 3개까지 비교할 수 있어요.'
     compareMessageTone.value = 'error'
     return
   }
 
-  compareMessage.value = '카드 비교에 담았습니다.'
+  compareMessage.value = '비교함에 담았어요.'
   compareMessageTone.value = 'success'
 }
 
@@ -259,7 +261,7 @@ async function handleToggleWishlist() {
   if (!card.value?.id || wishlistLoading.value) return
 
   if (!authStore.isAuthenticated) {
-    wishlistMessage.value = '로그인 후 찜할 수 있습니다.'
+    wishlistMessage.value = '로그인하면 찜할 수 있어요.'
     wishlistMessageTone.value = 'error'
     return
   }
@@ -270,16 +272,16 @@ async function handleToggleWishlist() {
   try {
     if (isWished.value) {
       await cardStore.removeWishlist(card.value.id)
-      wishlistMessage.value = '찜 목록에서 제거했습니다.'
+      wishlistMessage.value = '찜에서 뺐어요.'
       wishlistMessageTone.value = 'info'
       return
     }
 
     await cardStore.addWishlist(card.value.id, 'detail')
-    wishlistMessage.value = '찜 목록에 추가했습니다.'
+    wishlistMessage.value = '찜에 담았어요.'
     wishlistMessageTone.value = 'success'
   } catch (error) {
-    wishlistMessage.value = getApiErrorMessage(error, '찜 처리 중 문제가 발생했습니다.')
+    wishlistMessage.value = getApiErrorMessage(error, '찜을 바꾸지 못했어요.')
     wishlistMessageTone.value = 'error'
   } finally {
     wishlistLoading.value = false
@@ -307,7 +309,7 @@ function formatBenefitRate(benefit) {
 }
 
 async function fetchCategoryBreakdown() {
-  const surveyId = spendingStore.latestSurvey?.id
+  const surveyId = spendingStore.latestCsvSurvey?.id || spendingStore.analysisStatus.latest_csv_id
   if (!surveyId) {
     categoryBreakdown.value = []
     return
@@ -338,7 +340,7 @@ function buildSpendingMap() {
   if (hasBreakdown) return spending
 
   Object.entries(surveyFieldByCategory).forEach(([category, field]) => {
-    spending[category] = Number(spendingStore.latestSurvey?.[field] || 0)
+    spending[category] = Number(spendingStore.latestCsvSurvey?.[field] || 0)
   })
 
   return spending

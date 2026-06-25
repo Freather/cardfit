@@ -6,6 +6,7 @@ from .views import (
     CommentListCreateView,
     CommentDetailView,
     PostLikeView,
+    CommentLikeView,
     PostViewView,
 )
 
@@ -15,6 +16,7 @@ urlpatterns = [
     path('posts/<int:pk>/', PostDetailView.as_view(), name='post-detail'),
     path('posts/<int:pk>/comments/', CommentListCreateView.as_view(), name='comment-list-create'),
     path('posts/<int:pk>/comments/<int:comment_pk>/', CommentDetailView.as_view(), name='comment-detail'),
+    path('posts/<int:pk>/comments/<int:comment_pk>/like/', CommentLikeView.as_view(), name='comment-like'),
     path('posts/<int:pk>/like/', PostLikeView.as_view(), name='post-like'),
     path('posts/<int:pk>/view/', PostViewView.as_view(), name='post-view'),
 ]

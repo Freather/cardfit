@@ -8,15 +8,8 @@
         :username="username"
       />
 
-      <AiRecommendationSummary
-        v-if="isAnalysisReady && spendingReport"
-        :report="spendingReport"
-        :category-labels="categoryLabels"
-      />
-
       <RecommendedCardList
         :cards="cards"
-        :has-recommendations="recommendations.length > 0"
       />
     </div>
   </main>
@@ -25,40 +18,28 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 
-import AiRecommendationSummary from '../components/home/AiRecommendationSummary.vue'
 import RecommendedCardList from '../components/home/RecommendedCardList.vue'
 import SpendingSurveyForm from '../components/home/SpendingSurveyForm.vue'
-import {
-  hasSavedCsvUpload,
-  hasSavedSurveyPreferences,
-} from '../composables/useAnalysisAccess'
 import { useAuthState } from '../composables/useAuthState'
-import { aiService } from '../services/aiService'
-import { spendingService } from '../services/spendingService'
 import { useCardStore } from '../stores/cardStore'
 import { useSpendingStore } from '../stores/spendingStore'
-import { normalizeRecommendations } from '../utils/normalizeRecommendation'
 
 const { authStore, isLoggedIn, displayName, ensureProfile } = useAuthState()
 const spendingStore = useSpendingStore()
 const cardStore = useCardStore()
 
 const cards = ref([])
-const spendingReport = ref(null)
-const recommendations = ref([])
 const accessVersion = ref(0)
 
 const username = computed(() => displayName.value)
 const hasSurvey = computed(() => {
   accessVersion.value
-  return Boolean(spendingStore.latestSurvey) || hasSavedSurveyPreferences()
+  return Boolean(spendingStore.analysisStatus.has_survey)
 })
 const hasCsv = computed(() => {
   accessVersion.value
-  return hasSavedCsvUpload()
+  return Boolean(spendingStore.analysisStatus.has_csv)
 })
-const isAnalysisReady = computed(() => isLoggedIn.value && hasSurvey.value && hasCsv.value)
-
 const categoryLabels = {
   food: '식비',
   transport: '교통',
@@ -87,7 +68,7 @@ function buildDefaultCards(storeCards) {
 }
 
 async function loadCards() {
-  await cardStore.fetchCards()
+  await cardStore.fetchCards().catch(() => null)
   cards.value = buildDefaultCards(cardStore.cards)
 }
 
@@ -98,64 +79,11 @@ async function loadSavedSurvey() {
   accessVersion.value += 1
 }
 
-async function loadRecommendations() {
-  if (!isAnalysisReady.value) {
-    recommendations.value = []
-    cards.value = buildDefaultCards(cardStore.cards)
-    return
-  }
-
-  try {
-    const params = spendingStore.latestSurvey?.id
-      ? { survey_id: spendingStore.latestSurvey.id, top: 3 }
-      : { top: 3 }
-    const response = await aiService.fetchRecommendations(params)
-    const data = response?.data ?? {}
-    recommendations.value = normalizeRecommendations(data.recommendations || [])
-
-    if (!recommendations.value.length) {
-      cards.value = buildDefaultCards(cardStore.cards)
-      return
-    }
-
-    cards.value = recommendations.value.slice(0, 3).map((item) => {
-      const cardInfo = cardStore.cards.find((card) => String(card.id) === String(item.card_id))
-
-      return {
-        id: item.card_id,
-        name: item.card_name,
-        desc: item.reason || '소비 패턴과 잘 맞는 카드입니다.',
-        benefit: item.expected_monthly_benefit,
-        rank: item.rank || 0,
-        image_url: cardInfo?.image_url || '',
-      }
-    })
-  } catch (error) {
-    recommendations.value = []
-    cards.value = buildDefaultCards(cardStore.cards)
-  }
-}
-
-async function loadSpendingReport() {
-  if (!isAnalysisReady.value) {
-    spendingReport.value = null
-    return
-  }
-
-  try {
-    const { data } = await spendingService.fetchSpendingSummary()
-    spendingReport.value = data
-  } catch (error) {
-    spendingReport.value = null
-  }
-}
-
 async function refreshHomeData() {
   await ensureProfile()
 
   await loadSavedSurvey()
-  await loadRecommendations()
-  await loadSpendingReport()
+  cards.value = buildDefaultCards(cardStore.cards)
 }
 
 function formatNumber(value) {
@@ -173,7 +101,6 @@ watch(isLoggedIn, async () => {
 
 watch(() => spendingStore.latestSurvey, async () => {
   accessVersion.value += 1
-  await loadRecommendations()
-  await loadSpendingReport()
+  cards.value = buildDefaultCards(cardStore.cards)
 })
 </script>

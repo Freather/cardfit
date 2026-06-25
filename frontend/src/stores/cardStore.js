@@ -1,7 +1,6 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
-import { cardData } from '../data/cardData'
 import { cardService } from '../services/cardService'
 
 const categoryMap = {
@@ -40,7 +39,7 @@ function normalizeWish(wish = {}) {
 }
 
 export const useCardStore = defineStore('cards', () => {
-  const cards = ref([...cardData])
+  const cards = ref([])
   const selectedCard = ref(null)
   const wishlist = ref([])
   const isLoading = ref(false)
@@ -55,7 +54,7 @@ export const useCardStore = defineStore('cards', () => {
   const pagination = ref({
     page: 1,
     pageSize: 8,
-    total: cardData.length,
+    total: 0,
   })
 
   const filteredCards = computed(() => {
@@ -84,14 +83,15 @@ export const useCardStore = defineStore('cards', () => {
     error.value = null
 
     try {
-      const { data, error: requestError } = await cardService.fetchCards(params)
+      const { data } = await cardService.fetchCards(params)
       cards.value = (data.results || data).map(normalizeCard)
       pagination.value.total = data.count || cards.value.length
-      error.value = requestError || null
       return cards.value
     } catch (err) {
       error.value = err
-      return cards.value
+      cards.value = []
+      pagination.value.total = 0
+      throw err
     } finally {
       isLoading.value = false
     }
@@ -102,14 +102,13 @@ export const useCardStore = defineStore('cards', () => {
     error.value = null
 
     try {
-      const { data, error: requestError } = await cardService.fetchCardDetail(id)
+      const { data } = await cardService.fetchCardDetail(id)
       selectedCard.value = normalizeCard(data)
-      error.value = requestError || null
       return selectedCard.value
     } catch (err) {
       error.value = err
-      selectedCard.value = cardData.find((card) => String(card.id) === String(id)) || null
-      return selectedCard.value
+      selectedCard.value = null
+      throw err
     } finally {
       isLoading.value = false
     }

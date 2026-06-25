@@ -172,3 +172,45 @@ def get_gms_recommendations(survey) -> dict:
 
     except Exception as e:
         return {"error": str(e), "recommendations": [], "spending_insight": ""}
+
+
+def get_financial_chat_reply(messages: list[dict]) -> dict:
+    system_prompt = """당신은 CardFit의 금융 전문 AI 상담사입니다.
+사용자가 카드 혜택, 소비 리포트, 전월 실적, 연회비, 카드 비교를 쉽게 이해하도록 돕습니다.
+
+답변 원칙:
+- 한국어 존댓말을 사용합니다.
+- 첫 문장에 결론을 말합니다.
+- 어려운 금융 용어는 쉽게 풀어 설명합니다.
+- 한 문장은 짧게 씁니다.
+- 카드 발급, 투자, 대출처럼 중요한 결정은 사용자가 약관과 본인 상황을 확인하도록 안내합니다.
+- 특정 카드가 필요하면 CardFit의 카드 검색, AI 추천, 소비 리포트를 확인하도록 자연스럽게 안내합니다.
+- 확정적인 수익, 승인 보장, 법률·세무 자문처럼 단정적인 표현은 피합니다.
+"""
+
+    safe_messages = []
+    for message in messages[-8:]:
+        role = message.get('role')
+        content = str(message.get('content', '')).strip()
+        if role not in ('user', 'assistant') or not content:
+            continue
+        safe_messages.append({'role': role, 'content': content[:1000]})
+
+    if not safe_messages:
+        return {'reply': '궁금한 내용을 입력해주세요. 카드 혜택과 소비 분석을 쉽게 알려드릴게요.'}
+
+    try:
+        client = _build_client()
+        response = client.chat.completions.create(
+            model=settings.GMS_MODEL,
+            messages=[
+                {'role': 'system', 'content': system_prompt},
+                *safe_messages,
+            ],
+            temperature=0.45,
+            max_tokens=500,
+        )
+        reply = response.choices[0].message.content.strip()
+        return {'reply': reply}
+    except Exception as e:
+        return {'error': str(e), 'reply': ''}
