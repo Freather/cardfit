@@ -1,94 +1,79 @@
-# CardFit API 명세서
-
-> Base URL: `http://localhost:8000`  
-> 인증 방식: JWT Bearer Token  
+﻿# CardFit API 紐낆꽭??
+> Base URL: `http://localhost:8000`
+> ?몄쬆 諛⑹떇: JWT Bearer Token
 > Content-Type: `application/json`
+> 理쒖쥌 ?낅뜲?댄듃: 2026-06-25
 
----
+## 怨듯넻
 
-## 목차
+### ?몄쬆 ?ㅻ뜑
 
-- [인증 헤더](#인증-헤더)
-- [공통 응답 형식](#공통-응답-형식)
-- [1. Accounts — 계정](#1-accounts--계정)
-- [2. Cards — 카드](#2-cards--카드)
-- [3. Surveys — 지출 설문](#3-surveys--지출-설문)
-- [4. Transactions — 거래내역](#4-transactions--거래내역)
-- [5. Reports — 리포트](#5-reports--리포트)
-- [6. AI — 카드 추천](#6-ai--카드-추천)
-- [7. Community — 커뮤니티](#7-community--커뮤니티)
+濡쒓렇???먮뒗 ?뚯썝媛???묐떟??`tokens.access` 媛믪쓣 ?몄쬆???꾩슂??API???ы븿?⑸땲??
 
----
-
-## 인증 헤더
-
-로그인 후 발급된 `access` 토큰을 모든 인증 필요 요청에 포함합니다.
-
-```
+```http
 Authorization: Bearer <access_token>
 ```
 
----
-
-## 공통 응답 형식
-
-### 에러 응답
+### 怨듯넻 ?먮윭 ?묐떟
 
 ```json
 {
-  "detail": "에러 메시지"
+  "detail": "?먮윭 硫붿떆吏"
 }
 ```
 
-| HTTP 상태 | 의미 |
-|-----------|------|
-| 200 | 성공 |
-| 201 | 생성 성공 |
-| 204 | 삭제 성공 (본문 없음) |
-| 400 | 잘못된 요청 (유효성 검사 실패) |
-| 401 | 인증 필요 (토큰 없음 또는 만료) |
-| 403 | 권한 없음 |
-| 404 | 리소스 없음 |
+| HTTP ?곹깭 | ?섎? |
+| --- | --- |
+| 200 | ?깃났 |
+| 201 | ?앹꽦 ?깃났 |
+| 204 | ??젣/泥섎━ ?깃났, ?묐떟 蹂몃Ц ?놁쓬 |
+| 400 | ?섎せ???붿껌 ?먮뒗 ?좏슚??寃利??ㅽ뙣 |
+| 401 | ?몄쬆 ?꾩슂 ?먮뒗 ?좏겙 留뚮즺 |
+| 403 | 沅뚰븳 ?놁쓬 |
+| 404 | 由ъ냼???놁쓬 |
+| 502 | ?몃? AI API 泥섎━ ?ㅽ뙣 |
+| 503 | ?쒕쾭 ?ㅼ젙 ?먮뒗 ?몃? ?곕룞 以鍮?????|
 
----
+### 二쇱슂 肄붾뱶媛?
+| 援щ텇 | 肄붾뱶 |
+| --- | --- |
+| 移대뱶 ???| `credit`, `debit`, `prepaid` |
+| ?쒗깮 移댄뀒怨좊━ | `food`, `transportation`, `fuel`, `shopping`, `entertainment`, `communication`, `travel`, `health`, `point`, `other` |
+| 嫄곕옒/?뚮퉬 移댄뀒怨좊━ | `food`, `transport`, `fuel`, `shopping`, `entertainment`, `communication`, `health`, `other` |
+| ?쒗깮 ???| `discount`, `cashback`, `point`, `mileage` |
+| ?ㅻЦ ?낅젰 ???| `manual`, `csv`, `api` |
+| ?곕졊? | `20s`, `30s`, `40s`, `50s`, `60s` |
+| ?뚮뱷 ?섏? | `low`, `mid`, `high` |
+| 寃뚯떆湲 移댄뀒怨좊━ | `general`, `review`, `question`, `info` |
 
-## 1. Accounts — 계정
+## 1. Accounts
 
-### 1-1. 회원가입
-
-**POST** `/api/accounts/register/`  
-인증 불필요
-
-**Request Body**
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| email | string | ✅ | 이메일 (고유) |
-| username | string | ✅ | 닉네임 (고유) |
-| password | string | ✅ | 비밀번호 (8자 이상) |
-| password_confirm | string | ✅ | 비밀번호 확인 |
+### 1-1. ?뚯썝媛??
+`POST /api/accounts/register/`
+?몄쬆 遺덊븘??
+**Request**
 
 ```json
 {
   "email": "user@example.com",
-  "username": "홍길동",
+  "username": "移대뱶??,
   "password": "password123",
   "password_confirm": "password123"
 }
 ```
 
-**Response** `201 Created`
+**Response 201**
 
 ```json
 {
-  "message": "회원가입이 완료되었습니다.",
+  "message": "?뚯썝媛?낆씠 ?꾨즺?섏뿀?듬땲??",
   "user": {
     "id": 1,
     "email": "user@example.com",
-    "username": "홍길동",
+    "username": "移대뱶??,
     "selected_card_id": null,
-    "created_at": "2026-06-08T12:00:00+09:00",
-    "updated_at": "2026-06-08T12:00:00+09:00"
+    "created_at": "2026-06-25T12:00:00+09:00",
+    "updated_at": "2026-06-25T12:00:00+09:00"
   },
   "tokens": {
     "access": "<access_token>",
@@ -97,19 +82,10 @@ Authorization: Bearer <access_token>
 }
 ```
 
----
-
-### 1-2. 로그인
-
-**POST** `/api/accounts/login/`  
-인증 불필요
-
-**Request Body**
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| email | string | ✅ | 이메일 |
-| password | string | ✅ | 비밀번호 |
+### 1-2. 濡쒓렇??
+`POST /api/accounts/login/`
+?몄쬆 遺덊븘??
+**Request**
 
 ```json
 {
@@ -118,18 +94,18 @@ Authorization: Bearer <access_token>
 }
 ```
 
-**Response** `200 OK`
+**Response 200**
 
 ```json
 {
-  "message": "로그인 성공",
+  "message": "濡쒓렇???깃났",
   "user": {
     "id": 1,
     "email": "user@example.com",
-    "username": "홍길동",
+    "username": "移대뱶??,
     "selected_card_id": 3,
-    "created_at": "2026-06-08T12:00:00+09:00",
-    "updated_at": "2026-06-08T12:00:00+09:00"
+    "created_at": "2026-06-25T12:00:00+09:00",
+    "updated_at": "2026-06-25T12:00:00+09:00"
   },
   "tokens": {
     "access": "<access_token>",
@@ -138,18 +114,12 @@ Authorization: Bearer <access_token>
 }
 ```
 
----
+### 1-3. 濡쒓렇?꾩썐
 
-### 1-3. 로그아웃
+`POST /api/accounts/logout/`
+?몄쬆 ?꾩슂
 
-**POST** `/api/accounts/logout/`  
-인증 필요
-
-**Request Body**
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| refresh | string | ✅ | Refresh 토큰 (블랙리스트 등록) |
+**Request**
 
 ```json
 {
@@ -157,22 +127,19 @@ Authorization: Bearer <access_token>
 }
 ```
 
-**Response** `200 OK`
+**Response 200**
 
 ```json
 {
-  "message": "로그아웃 완료"
+  "message": "濡쒓렇?꾩썐 ?꾨즺"
 }
 ```
 
----
+### 1-4. ?좏겙 媛깆떊
 
-### 1-4. 토큰 갱신
-
-**POST** `/api/accounts/token/refresh/`  
-인증 불필요
-
-**Request Body**
+`POST /api/accounts/token/refresh/`
+?몄쬆 遺덊븘??
+**Request**
 
 ```json
 {
@@ -180,7 +147,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-**Response** `200 OK`
+**Response 200**
 
 ```json
 {
@@ -189,70 +156,42 @@ Authorization: Bearer <access_token>
 }
 ```
 
----
+### 1-5. ?꾨줈??議고쉶/?섏젙/?덊눜
 
-### 1-5. 프로필 조회
+`GET /api/accounts/profile/`
+`PUT /api/accounts/profile/`
+`DELETE /api/accounts/profile/`
+?몄쬆 ?꾩슂
 
-**GET** `/api/accounts/profile/`  
-인증 필요
+**PUT Request**
 
-**Response** `200 OK`
+```json
+{
+  "username": "?덈땳?ㅼ엫"
+}
+```
+
+**Response 200**
 
 ```json
 {
   "id": 1,
   "email": "user@example.com",
-  "username": "홍길동",
+  "username": "?덈땳?ㅼ엫",
   "selected_card_id": 3,
-  "created_at": "2026-06-08T12:00:00+09:00",
-  "updated_at": "2026-06-08T12:00:00+09:00"
+  "created_at": "2026-06-25T12:00:00+09:00",
+  "updated_at": "2026-06-25T12:30:00+09:00"
 }
 ```
 
----
+`DELETE`??怨꾩젙??鍮꾪솢?깊솕?섍퀬 `204 No Content`瑜?諛섑솚?⑸땲??
 
-### 1-6. 프로필 수정
+### 1-6. ???移대뱶 ?ㅼ젙
 
-**PUT** `/api/accounts/profile/`  
-인증 필요 · 부분 수정 가능
+`PUT /api/accounts/select-card/`
+?몄쬆 ?꾩슂
 
-**Request Body**
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| username | string | | 닉네임 변경 |
-
-```json
-{
-  "username": "새닉네임"
-}
-```
-
-**Response** `200 OK` — 수정된 프로필 반환
-
----
-
-### 1-7. 회원 탈퇴
-
-**DELETE** `/api/accounts/profile/`  
-인증 필요
-
-계정을 비활성화합니다 (실제 삭제 아님).
-
-**Response** `204 No Content`
-
----
-
-### 1-8. 대표 카드 설정
-
-**PUT** `/api/accounts/select-card/`  
-인증 필요
-
-**Request Body**
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| selected_card | integer | ✅ | 카드 ID (null 가능) |
+**Request**
 
 ```json
 {
@@ -260,33 +199,72 @@ Authorization: Bearer <access_token>
 }
 ```
 
-**Response** `200 OK`
+**Response 200**
 
 ```json
 {
-  "message": "대표 카드가 설정되었습니다.",
+  "message": "???移대뱶媛 ?ㅼ젙?섏뿀?듬땲??",
   "selected_card_id": 3
 }
 ```
 
----
+### 1-7. ?뚯뀥 濡쒓렇??
+| Method | URL | ?ㅻ챸 |
+| --- | --- | --- |
+| GET | `/api/accounts/oauth/kakao/` | 移댁뭅???몄쬆 ?섏씠吏濡?由щ떎?대젆??|
+| GET | `/api/accounts/oauth/kakao/?debug=1` | 移댁뭅??OAuth ?ㅼ젙 ?뺤씤 |
+| GET | `/api/accounts/oauth/kakao/callback/` | 移댁뭅??肄쒕갚 |
+| GET | `/api/accounts/oauth/naver/` | ?ㅼ씠踰??몄쬆 ?섏씠吏濡?由щ떎?대젆??|
+| GET | `/api/accounts/oauth/naver/callback/` | ?ㅼ씠踰?肄쒕갚 |
+| POST | `/api/accounts/oauth/email/complete/` | ?뚯뀥 怨꾩젙 ?대찓??蹂댁셿 ??濡쒓렇???꾨즺 |
 
-## 2. Cards — 카드
+OAuth ?쒖옉 API??`next` 荑쇰━ ?뚮씪誘명꽣瑜?諛쏆쓣 ???덉뒿?덈떎.
 
-### 2-1. 카드 목록 조회
+**?대찓??蹂댁셿 Request**
 
-**GET** `/api/cards/`  
-인증 불필요
+```json
+{
+  "token": "<pending_oauth_email_token>",
+  "email": "user@example.com",
+  "next": "/profile"
+}
+```
 
+**Response 200**
+
+```json
+{
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "username": "移대뱶??,
+    "selected_card_id": null,
+    "created_at": "2026-06-25T12:00:00+09:00",
+    "updated_at": "2026-06-25T12:00:00+09:00"
+  },
+  "tokens": {
+    "access": "<access_token>",
+    "refresh": "<refresh_token>"
+  },
+  "next": "/profile"
+}
+```
+
+## 2. Cards
+
+### 2-1. 移대뱶 紐⑸줉
+
+`GET /api/cards/`
+?몄쬆 遺덊븘??
 **Query Parameters**
 
-| 파라미터 | 타입 | 설명 | 예시 |
-|----------|------|------|------|
-| card_type | string | 카드 종류 필터 | `credit` / `debit` / `prepaid` |
-| company | string | 카드사 이름 검색 (부분 일치) | `삼성` |
-| max_annual_fee | integer | 연회비 상한 필터 | `30000` |
+| ?대쫫 | ???| ?ㅻ챸 |
+| --- | --- | --- |
+| `card_type` | string | `credit`, `debit`, `prepaid` |
+| `company` | string | 移대뱶?щ챸 遺遺?寃??|
+| `max_annual_fee` | integer | ?고쉶鍮??곹븳 |
 
-**Response** `200 OK`
+**Response 200**
 
 ```json
 {
@@ -294,80 +272,73 @@ Authorization: Bearer <access_token>
   "results": [
     {
       "id": 1,
-      "card_company": "삼성카드",
-      "card_name": "삼성 iD ON 카드",
+      "card_company": "?쇱꽦移대뱶",
+      "card_name": "?쇱꽦 iD ON 移대뱶",
       "card_type": "credit",
-      "card_type_display": "신용카드",
-      "annual_fee": 0,
+      "card_type_display": "?좎슜移대뱶",
+      "annual_fee": 20000,
       "min_prev_month_spending": 300000,
       "apply_url": "https://www.samsungcard.com",
+      "image_url": "https://example.com/card.png",
       "benefit_count": 3,
+      "benefits": [
+        {
+          "id": 1,
+          "benefit_category": "food",
+          "benefit_category_display": "?앸퉬",
+          "benefit_type": "discount",
+          "benefit_type_display": "?좎씤",
+          "discount_rate": "10.00",
+          "monthly_limit": 3000,
+          "condition_description": "?꾩썡 ?ㅼ쟻 30留뚯썝 ?댁긽"
+        }
+      ],
       "is_wished": false,
-      "synced_at": "2026-06-01T00:00:00Z"
+      "synced_at": "2026-06-25T12:00:00+09:00"
     }
   ]
 }
 ```
 
----
+### 2-2. 移대뱶 ?곸꽭
 
-### 2-2. 카드 상세 조회
+`GET /api/cards/{id}/`
+?몄쬆 遺덊븘??
+?묐떟 ?꾨뱶??移대뱶 紐⑸줉??移대뱶 媛앹껜? 嫄곗쓽 媛숈쑝硫? `benefits` ?꾩껜 紐⑸줉???ы븿?⑸땲??
 
-**GET** `/api/cards/{id}/`  
-인증 불필요
+### 2-3. 移대뱶 ?쒗깮 紐⑸줉
 
-**Response** `200 OK`
-
-```json
-{
-  "id": 1,
-  "card_company": "삼성카드",
-  "card_name": "삼성 iD ON 카드",
-  "card_type": "credit",
-  "card_type_display": "신용카드",
-  "annual_fee": 0,
-  "min_prev_month_spending": 300000,
-  "apply_url": "https://www.samsungcard.com",
-  "is_wished": false,
-  "synced_at": "2026-06-01T00:00:00Z",
-  "benefits": [
-    {
-      "id": 1,
-      "benefit_category": "food",
-      "benefit_category_display": "식비",
-      "benefit_type": "discount",
-      "benefit_type_display": "할인",
-      "discount_rate": "10.00",
-      "monthly_limit": 3000,
-      "condition_description": "전월 실적 30만원 이상 시 식비 10% 할인, 월 3,000원 한도"
-    }
-  ]
-}
-```
-
----
-
-### 2-3. 카드 혜택 목록
-
-**GET** `/api/cards/{id}/benefits/`  
-인증 불필요
-
+`GET /api/cards/{id}/benefits/`
+?몄쬆 遺덊븘??
 **Query Parameters**
 
-| 파라미터 | 타입 | 설명 | 예시 |
-|----------|------|------|------|
-| category | string | 혜택 카테고리 필터 | `food` / `transport` / `shopping` |
+| ?대쫫 | ???| ?ㅻ챸 |
+| --- | --- | --- |
+| `category` | string | ?쒗깮 移댄뀒怨좊━ ?꾪꽣 |
 
-**Response** `200 OK` — 혜택 배열 반환
+**Response 200**
 
----
+```json
+[
+  {
+    "id": 1,
+    "benefit_category": "food",
+    "benefit_category_display": "?앸퉬",
+    "benefit_type": "discount",
+    "benefit_type_display": "?좎씤",
+    "discount_rate": "10.00",
+    "monthly_limit": 3000,
+    "condition_description": "?꾩썡 ?ㅼ쟻 30留뚯썝 ?댁긽"
+  }
+]
+```
 
-### 2-4. 카드 찜 목록 조회
+### 2-4. 李?紐⑸줉
 
-**GET** `/api/cards/wishlist/`  
-인증 필요
+`GET /api/cards/wishlist/`
+?몄쬆 ?꾩슂
 
-**Response** `200 OK`
+**Response 200**
 
 ```json
 {
@@ -375,32 +346,28 @@ Authorization: Bearer <access_token>
   "results": [
     {
       "id": 1,
+      "user": 1,
       "card": {
         "id": 3,
-        "card_company": "삼성카드",
-        "card_name": "삼성 iD ON 카드",
+        "card_company": "?쇱꽦移대뱶",
+        "card_name": "?쇱꽦 iD ON 移대뱶",
+        "card_type": "credit",
         "is_wished": true
       },
       "source": "detail",
-      "created_at": "2026-06-22T07:16:00Z"
+      "created_at": "2026-06-25T12:00:00+09:00"
     }
   ]
 }
 ```
 
----
+### 2-5. 李?異붽?/??젣
 
-### 2-5. 카드 찜 추가
+`POST /api/cards/wishlist/`
+`DELETE /api/cards/wishlist/{card_id}/`
+?몄쬆 ?꾩슂
 
-**POST** `/api/cards/wishlist/`  
-인증 필요
-
-**Request Body**
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| card_id | integer | ✅ | 찜할 카드 ID |
-| source | string | | `search` / `detail` / `recommendation` / `compare` |
+**POST Request**
 
 ```json
 {
@@ -409,95 +376,17 @@ Authorization: Bearer <access_token>
 }
 ```
 
-**Response** `201 Created`
+`source` 媛믪? `search`, `detail`, `recommendation`, `compare` 以??섎굹?낅땲??
 
----
+## 3. Spending Surveys
 
-### 2-6. 카드 찜 삭제
+### 3-1. ?ㅻЦ 紐⑸줉/?앹꽦
 
-**DELETE** `/api/cards/wishlist/{card_id}/`  
-인증 필요
+`GET /api/spending/`
+`POST /api/spending/`
+?몄쬆 ?꾩슂
 
-**Response** `204 No Content`
-
----
-
-#### 카드 카테고리 코드표
-
-| 코드 | 의미 |
-|------|------|
-| `food` | 식비 |
-| `transport` | 교통 |
-| `fuel` | 주유 |
-| `shopping` | 쇼핑 |
-| `entertainment` | 여가/문화 |
-| `communication` | 통신 |
-| `travel` | 여행 |
-| `health` | 의료/건강 |
-| `other` | 기타 |
-
----
-
-## 3. Surveys — 지출 설문
-
-### 3-1. 설문 목록 조회
-
-**GET** `/api/spending/`  
-인증 필요
-
-로그인한 사용자의 설문 목록을 최신순으로 반환합니다.
-
-**Response** `200 OK`
-
-```json
-[
-  {
-    "id": 1,
-    "input_type": "manual",
-    "input_type_display": "직접입력",
-    "food_monthly": 300000,
-    "transport_monthly": 80000,
-    "fuel_monthly": 100000,
-    "shopping_monthly": 200000,
-    "entertainment_monthly": 50000,
-    "communication_monthly": 55000,
-    "health_monthly": 20000,
-    "other_monthly": 30000,
-    "total_monthly": 835000,
-    "age_group": "30s",
-    "age_group_display": "30대",
-    "max_annual_fee": 30000,
-    "income_level": "mid",
-    "income_level_display": "중소득",
-    "created_at": "2026-06-08T12:00:00+09:00",
-    "updated_at": "2026-06-08T12:00:00+09:00"
-  }
-]
-```
-
----
-
-### 3-2. 설문 생성 (직접 입력)
-
-**POST** `/api/spending/`  
-인증 필요
-
-**Request Body**
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| input_type | string | | `manual` / `csv` / `api` (기본값: `manual`) |
-| food_monthly | integer | | 월 식비 (원) |
-| transport_monthly | integer | | 월 교통비 (원) |
-| fuel_monthly | integer | | 월 주유비 (원) |
-| shopping_monthly | integer | | 월 쇼핑비 (원) |
-| entertainment_monthly | integer | | 월 여가비 (원) |
-| communication_monthly | integer | | 월 통신비 (원) |
-| health_monthly | integer | | 월 의료/건강비 (원) |
-| other_monthly | integer | | 월 기타 지출 (원) |
-| age_group | string | ✅ | `20s` / `30s` / `40s` / `50s` / `60s` |
-| max_annual_fee | integer | ✅ | 최대 연회비 (원) |
-| income_level | string | ✅ | `low` / `mid` / `high` |
+**POST Request**
 
 ```json
 {
@@ -516,460 +405,427 @@ Authorization: Bearer <access_token>
 }
 ```
 
-**Response** `201 Created` — 생성된 설문 반환
-
----
-
-### 3-3. 설문 상세 조회
-
-**GET** `/api/spending/{id}/`  
-인증 필요
-
-거래내역(`transactions`)을 포함하여 반환합니다.
-
-**Response** `200 OK`
+**Response 200/201**
 
 ```json
 {
   "id": 1,
-  "input_type": "csv",
-  "food_monthly": 250000,
-  "transport_monthly": 95000,
-  "fuel_monthly": 0,
+  "input_type": "manual",
+  "input_type_display": "吏곸젒?낅젰",
+  "food_monthly": 300000,
+  "transport_monthly": 80000,
+  "fuel_monthly": 100000,
+  "shopping_monthly": 200000,
+  "entertainment_monthly": 50000,
+  "communication_monthly": 55000,
   "health_monthly": 20000,
-  ...
-  "total_monthly": 695000,
-  "transactions": [
-    {
-      "id": 1,
-      "survey": 1,
-      "category": "food",
-      "category_display": "식비",
-      "merchant": "스타벅스 강남점",
-      "amount": 6500,
-      "transaction_date": "2026-05-31"
-    }
-  ]
+  "other_monthly": 30000,
+  "total_monthly": 835000,
+  "age_group": "30s",
+  "age_group_display": "30?",
+  "max_annual_fee": 30000,
+  "income_level": "mid",
+  "income_level_display": "以묎컙",
+  "transaction_count": 0,
+  "transaction_start_date": null,
+  "transaction_end_date": null,
+  "created_at": "2026-06-25T12:00:00+09:00",
+  "updated_at": "2026-06-25T12:00:00+09:00"
 }
 ```
 
----
+### 3-2. ?ㅻЦ ?곹깭
 
-### 3-4. 설문 수정
+`GET /api/spending/status/`
+?몄쬆 ?꾩슂
 
-**PUT** `/api/spending/{id}/`  
-인증 필요 · 부분 수정 가능
-
-**Request Body** — 수정할 필드만 전송
+**Response 200**
 
 ```json
 {
-  "max_annual_fee": 50000,
-  "age_group": "30s"
+  "has_survey": true,
+  "has_csv": true,
+  "latest_survey_id": 1,
+  "latest_csv_id": 2
 }
 ```
 
-**Response** `200 OK` — 수정된 설문 반환
+### 3-3. ?ㅻЦ ?곸꽭/?섏젙/??젣
 
----
+`GET /api/spending/{id}/`
+`PUT /api/spending/{id}/`
+`DELETE /api/spending/{id}/`
+?몄쬆 ?꾩슂
 
-### 3-5. 설문 삭제
+?곸꽭 議고쉶???ㅻЦ ?묐떟 ?꾨뱶??`transactions` 諛곗뿴??異붽??⑸땲??
+`PUT`? 遺遺??섏젙??媛?ν빀?덈떎. `DELETE`??`204 No Content`瑜?諛섑솚?⑸땲??
 
-**DELETE** `/api/spending/{id}/`  
-인증 필요
+### 3-4. CSV ?낅줈??
+`POST /api/spending/upload-csv/`
+?몄쬆 ?꾩슂, `multipart/form-data`
 
-연결된 거래내역도 함께 삭제됩니다.
+?쇱꽦移대뱶 CSV瑜??뚯떛??`input_type: "csv"` ?ㅻЦ怨?嫄곕옒?댁뿭???앹꽦?⑸땲??
 
-**Response** `204 No Content`
+**Form Data**
 
----
+| ?대쫫 | ???| ?꾩닔 | 湲곕낯媛?| ?ㅻ챸 |
+| --- | --- | --- | --- | --- |
+| `file` | file | O | - | `.csv`, 理쒕? 5MB |
+| `age_group` | string | X | `30s` | ?곕졊? |
+| `income_level` | string | X | `mid` | ?뚮뱷 ?섏? |
+| `max_annual_fee` | integer | X | `100000` | 理쒕? ?고쉶鍮?|
 
-### 3-6. CSV 파일 업로드
-
-**POST** `/api/spending/upload-csv/`  
-인증 필요 · `Content-Type: multipart/form-data`
-
-삼성카드 CSV 포맷을 파싱하여 설문 + 거래내역을 자동 생성합니다.
-
-**Request Form Data**
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| file | file | ✅ | `.csv` 파일 (최대 5MB) |
-
-**Response** `201 Created`
+**Response 201**
 
 ```json
 {
-  "message": "87건의 거래내역이 분석되었습니다.",
+  "message": "87嫄댁쓽 嫄곕옒?댁뿭??遺꾩꽍?덉뒿?덈떎.",
   "survey": {
     "id": 2,
     "input_type": "csv",
-    "food_monthly": 312400,
-    "transport_monthly": 95600,
-    "shopping_monthly": 288000,
-    "entertainment_monthly": 42000,
-    "communication_monthly": 55000,
-    "other_monthly": 45000,
     "total_monthly": 838000,
-    "transactions": [ ... ]
+    "transaction_count": 87,
+    "transaction_start_date": "2026-04-01",
+    "transaction_end_date": "2026-05-31",
+    "transactions": [
+      {
+        "id": 1,
+        "survey": 2,
+        "category": "food",
+        "category_display": "?앸퉬",
+        "merchant": "?ㅽ?踰낆뒪 媛뺣궓??,
+        "amount": 6500,
+        "transaction_date": "2026-05-31"
+      }
+    ]
   }
 }
 ```
 
-> CSV 업로드 후 `age_group`, `max_annual_fee`, `income_level`은 기본값으로 저장됩니다.  
-> `/api/spending/{id}/` PUT으로 이후 수정하세요.
+## 4. Transactions
 
----
+### 4-1. 嫄곕옒?댁뿭 紐⑸줉/?앹꽦
 
-## 4. Transactions — 거래내역
+`GET /api/transactions/`
+`POST /api/transactions/`
+?몄쬆 ?꾩슂
 
-### 4-1. 거래내역 목록 조회
+**GET Query Parameters**
 
-**GET** `/api/transactions/`  
-인증 필요
+| ?대쫫 | ???| ?ㅻ챸 |
+| --- | --- | --- |
+| `survey_id` | integer | ?뱀젙 ?ㅻЦ??嫄곕옒?댁뿭留?議고쉶 |
+| `category` | string | 嫄곕옒 移댄뀒怨좊━ ?꾪꽣 |
 
-**Query Parameters**
-
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| survey_id | integer | 특정 설문의 거래내역만 조회 |
-| category | string | 카테고리 필터 |
-
-**Response** `200 OK`
-
-```json
-[
-  {
-    "id": 1,
-    "survey": 1,
-    "category": "food",
-    "category_display": "식비",
-    "merchant": "스타벅스 강남점",
-    "amount": 6500,
-    "transaction_date": "2026-05-31"
-  }
-]
-```
-
----
-
-### 4-2. 거래내역 단건 추가
-
-**POST** `/api/transactions/`  
-인증 필요
-
-**Request Body**
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| survey_id | integer | ✅ | 연결할 설문 ID |
-| category | string | ✅ | `food` / `transport` / `fuel` / `shopping` / `entertainment` / `communication` / `health` / `other` |
-| merchant | string | ✅ | 가맹점명 |
-| amount | integer | ✅ | 금액 (원, 음수 불가) |
-| transaction_date | string | ✅ | 거래일 (`YYYY-MM-DD`) |
+**POST Request**
 
 ```json
 {
   "survey_id": 1,
   "category": "food",
-  "merchant": "이디야커피 역삼점",
-  "amount": 4500,
-  "transaction_date": "2026-05-30"
+  "merchant": "?ㅽ?踰낆뒪 媛뺣궓??,
+  "amount": 6500,
+  "transaction_date": "2026-05-31"
 }
 ```
 
-**Response** `201 Created`
-
----
-
-### 4-3. 거래내역 상세 조회
-
-**GET** `/api/transactions/{id}/`  
-인증 필요
-
-**Response** `200 OK` — 거래내역 단건 반환
-
----
-
-### 4-4. 거래내역 수정
-
-**PUT** `/api/transactions/{id}/`  
-인증 필요 · 부분 수정 가능
-
-**Response** `200 OK`
-
----
-
-### 4-5. 거래내역 삭제
-
-**DELETE** `/api/transactions/{id}/`  
-인증 필요
-
-**Response** `204 No Content`
-
----
-
-## 5. Reports — 리포트
-
-> 모든 리포트 API는 인증이 필요하며, 로그인한 사용자의 데이터만 조회합니다.
-
----
-
-### 5-1. 월 지출 요약
-
-**GET** `/api/reports/spending-summary/`  
-인증 필요
-
-가장 최근 설문 기준으로 카테고리별 월 지출 요약을 반환합니다.
-
-**Response** `200 OK`
+**Response 200/201**
 
 ```json
 {
-  "survey_id": 1,
+  "id": 1,
+  "survey": 1,
+  "category": "food",
+  "category_display": "?앸퉬",
+  "merchant": "?ㅽ?踰낆뒪 媛뺣궓??,
+  "amount": 6500,
+  "transaction_date": "2026-05-31"
+}
+```
+
+### 4-2. 嫄곕옒?댁뿭 ?곸꽭/?섏젙/??젣
+
+`GET /api/transactions/{id}/`
+`PUT /api/transactions/{id}/`
+`DELETE /api/transactions/{id}/`
+?몄쬆 ?꾩슂
+
+`PUT`? `category`, `merchant`, `amount`, `transaction_date` 遺遺??섏젙??媛?ν빀?덈떎.
+`DELETE`??`204 No Content`瑜?諛섑솚?⑸땲??
+
+## 5. Reports
+
+紐⑤뱺 由ы룷??API???몄쬆???꾩슂?⑸땲??
+
+### 5-1. ?뚮퉬 ?붿빟
+
+`GET /api/reports/spending-summary/`
+
+理쒓렐 `manual` ?ㅻЦ???좏샇 議곌굔?쇰줈, 理쒓렐 `csv` ?ㅻЦ???ㅼ젣 ?뚮퉬 ?곗씠?곕줈 ?ъ슜?⑸땲??
+
+**Response 200**
+
+```json
+{
+  "survey_id": 2,
   "input_type": "csv",
   "categories": {
     "food": 312400,
     "transport": 95600,
+    "fuel": 0,
     "shopping": 288000,
     "entertainment": 42000,
     "communication": 55000,
+    "health": 20000,
     "other": 45000
   },
-  "total_monthly": 838000,
+  "food_monthly": 312400,
+  "transport_monthly": 95600,
+  "fuel_monthly": 0,
+  "shopping_monthly": 288000,
+  "entertainment_monthly": 42000,
+  "communication_monthly": 55000,
+  "health_monthly": 20000,
+  "other_monthly": 45000,
+  "total_monthly": 858000,
+  "preference_survey_id": 1,
   "age_group": "30s",
   "income_level": "mid",
   "max_annual_fee": 30000,
-  "created_at": "2026-06-08T12:00:00+09:00"
+  "transaction_start_date": "2026-04-01",
+  "transaction_end_date": "2026-05-31",
+  "created_at": "2026-06-25T12:00:00+09:00"
 }
 ```
 
----
+### 5-2. 移댄뀒怨좊━ 遺꾩꽍
 
-### 5-2. 카테고리별 비율 분석
-
-**GET** `/api/reports/category-breakdown/`  
-인증 필요
+`GET /api/reports/category-breakdown/`
 
 **Query Parameters**
 
-| 파라미터 | 타입 | 설명 |
-|----------|------|------|
-| survey_id | integer | 특정 설문 ID 지정 (미입력 시 전체) |
+| ?대쫫 | ???| ?ㅻ챸 |
+| --- | --- | --- |
+| `survey_id` | integer | ?뱀젙 CSV ?ㅻЦ 湲곗? 遺꾩꽍. ?놁쑝硫?理쒓렐 CSV ?ㅻЦ ?ъ슜 |
 
-**Response** `200 OK`
+**Response 200**
 
 ```json
 {
   "total": 838000,
+  "raw_total": 1676000,
+  "period_months": 2,
+  "transaction_start_date": "2026-04-01",
+  "transaction_end_date": "2026-05-31",
   "breakdown": [
-    { "category": "food",          "total": 312400, "count": 42, "ratio": 37.3 },
-    { "category": "shopping",      "total": 288000, "count": 18, "ratio": 34.4 },
-    { "category": "transport",     "total": 95600,  "count": 15, "ratio": 11.4 },
-    { "category": "communication", "total": 55000,  "count": 1,  "ratio": 6.6  },
-    { "category": "other",         "total": 45000,  "count": 7,  "ratio": 5.4  },
-    { "category": "entertainment", "total": 42000,  "count": 4,  "ratio": 5.0  }
+    {
+      "category": "food",
+      "total": 312400,
+      "raw_total": 624800,
+      "count": 42,
+      "ratio": 37.3
+    }
   ]
 }
 ```
 
----
+### 5-3. ?붾퀎 異붿씠
 
-### 5-3. 월별 지출 트렌드
+`GET /api/reports/monthly-trend/`
 
-**GET** `/api/reports/monthly-trend/`  
-인증 필요
+濡쒓렇???ъ슜?먯쓽 紐⑤뱺 CSV 嫄곕옒?댁뿭????移댄뀒怨좊━蹂꾨줈 吏묎퀎?⑸땲??
 
-**Response** `200 OK`
+**Response 200**
 
 ```json
 {
   "trend": {
     "2026-04": {
       "food": 280000,
-      "transport": 75000,
-      "shopping": 320000
+      "transport": 75000
     },
     "2026-05": {
       "food": 312400,
-      "transport": 95600,
       "shopping": 288000
     }
   }
 }
 ```
 
----
+### 5-4. ?곸쐞 媛留뱀젏
 
-### 5-4. 지출 상위 가맹점
-
-**GET** `/api/reports/top-merchants/`  
-인증 필요
+`GET /api/reports/top-merchants/`
 
 **Query Parameters**
 
-| 파라미터 | 타입 | 기본값 | 설명 |
-|----------|------|--------|------|
-| limit | integer | 10 | 반환할 가맹점 수 |
+| ?대쫫 | ???| 湲곕낯媛?| ?ㅻ챸 |
+| --- | --- | --- | --- |
+| `limit` | integer | `10` | 諛섑솚??媛留뱀젏 ??|
 
-**Response** `200 OK`
+**Response 200**
 
 ```json
 {
   "results": [
-    { "merchant": "홈플러스 강남점",    "category": "shopping", "total": 174600, "count": 2 },
-    { "merchant": "무신사 주식회사",    "category": "shopping", "total": 158000, "count": 2 },
-    { "merchant": "에스케이텔레콤 (주)", "category": "communication", "total": 110000, "count": 2 }
+    {
+      "merchant": "?좏뵆?ㅽ넗??媛뺣궓",
+      "category": "shopping",
+      "total": 174600,
+      "count": 2
+    }
   ]
 }
 ```
 
----
+## 6. AI
 
-## 6. AI — 카드 추천
+AI API??紐⑤몢 ?몄쬆???꾩슂?섎ŉ, ?쒕쾭??`GMS_API_KEY`媛 ?ㅼ젙?섏뼱 ?덉뼱???⑸땲??
 
-### 6-1. 설문 기반 카드 추천 (GET)
+### 6-1. AI 移대뱶 異붿쿇
 
-**GET** `/api/ai/recommend/`  
-인증 필요
+`GET /api/ai/recommend/`
+`POST /api/ai/recommend/`
 
-저장된 설문 데이터를 기반으로 최적 카드를 추천합니다.
+`GET`? 理쒖떊 `manual` ?ㅻЦ怨?理쒖떊 ?먮뒗 吏?뺥븳 `csv` ?ㅻЦ??紐⑤몢 ?덉뼱???⑸땲??
 
-**Query Parameters**
+**GET Query Parameters**
 
-| 파라미터 | 타입 | 기본값 | 설명 |
-|----------|------|--------|------|
-| survey_id | integer | | 특정 설문 ID (미입력 시 최신 설문 사용) |
-| top | integer | 5 | 추천 카드 수 (최대 10) |
+| ?대쫫 | ???| ?ㅻ챸 |
+| --- | --- | --- |
+| `survey_id` | integer | ?뱀젙 CSV ?ㅻЦ 湲곗? 異붿쿇 |
+| `top` | integer | ?묐떟 異붿쿇 媛쒖닔 ?쒗븳 |
 
-**Response** `200 OK`
+**GET Response 200**
 
 ```json
 {
-  "survey_id": 1,
+  "survey_id": 2,
+  "preference_survey_id": 1,
   "based_on": {
-    "food_monthly": 300000,
-    "transport_monthly": 80000,
-    "shopping_monthly": 200000,
-    "entertainment_monthly": 50000,
+    "food_monthly": 312400,
+    "transport_monthly": 95600,
+    "fuel_monthly": 0,
+    "shopping_monthly": 288000,
+    "entertainment_monthly": 42000,
     "communication_monthly": 55000,
-    "other_monthly": 30000,
+    "health_monthly": 20000,
+    "other_monthly": 45000,
+    "total_monthly": 858000,
     "max_annual_fee": 30000
   },
   "recommendations": [
     {
       "card_id": 4,
-      "card_company": "신한카드",
-      "card_name": "신한 Mr. Life 카드",
-      "card_type": "credit",
-      "annual_fee": 30000,
-      "apply_url": "https://www.shinhancard.com",
-      "total_annual_savings": 102600,
-      "net_benefit": 72600,
-      "benefit_details": [
-        {
-          "category": "food",
-          "discount_rate": 5.0,
-          "monthly_spending": 300000,
-          "monthly_savings": 15000,
-          "annual_savings": 180000
-        }
-      ]
+      "card_name": "?쇱꽦 iD ON 移대뱶",
+      "card_company": "?쇱꽦移대뱶",
+      "annual_fee": 20000,
+      "apply_url": "https://www.samsungcard.com",
+      "rank": 1,
+      "reason": "異붿쿇 ?ъ쑀",
+      "expected_monthly_benefit": "??15,000??,
+      "net_benefit": "??160,000??,
+      "benefit_details": "二쇱슂 ?쒗깮 ?ㅻ챸"
     }
-  ]
+  ],
+  "spending_insight": "?뚮퉬 ?⑦꽩 遺꾩꽍 臾몄옣"
 }
 ```
 
----
-
-### 6-2. 즉석 지출 입력 추천 (POST)
-
-**POST** `/api/ai/recommend/`  
-인증 필요
-
-설문을 저장하지 않고 즉석에서 지출을 입력해 카드를 추천받습니다.
-
-**Request Body**
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| food_monthly | integer | | 월 식비 (원) |
-| transport_monthly | integer | | 월 교통비 (원) |
-| fuel_monthly | integer | | 월 주유비 (원) |
-| shopping_monthly | integer | | 월 쇼핑비 (원) |
-| entertainment_monthly | integer | | 월 여가비 (원) |
-| communication_monthly | integer | | 월 통신비 (원) |
-| health_monthly | integer | | 월 의료/건강비 (원) |
-| other_monthly | integer | | 월 기타 지출 (원) |
-| max_annual_fee | integer | | 최대 연회비 (기본값: 200,000원) |
-| top | integer | | 추천 카드 수 (기본값: 5, 최대 10) |
+**POST Request**
 
 ```json
 {
   "food_monthly": 400000,
   "transport_monthly": 60000,
+  "fuel_monthly": 0,
   "shopping_monthly": 150000,
+  "entertainment_monthly": 50000,
   "communication_monthly": 55000,
-  "max_annual_fee": 15000,
-  "top": 3
+  "health_monthly": 20000,
+  "other_monthly": 30000,
+  "max_annual_fee": 15000
 }
 ```
 
-**Response** `200 OK`
+`POST` ?묐떟? AI媛 ?앹꽦??`recommendations`, `spending_insight` 援ъ“瑜?諛섑솚?⑸땲??
 
-```json
-{
-  "recommendations": [
-    {
-      "card_id": 1,
-      "card_company": "삼성카드",
-      "card_name": "삼성 iD ON 카드",
-      "annual_fee": 0,
-      "total_annual_savings": 48000,
-      "net_benefit": 48000,
-      "benefit_details": [ ... ]
-    }
-  ]
-}
-```
+### 6-2. ?뱀젙 移대뱶 AI 異붿쿇 ?ъ쑀
 
----
-
-## 추천 알고리즘 설명
-
-**net_benefit 점수** = 연간 예상 절감액 합계 − 연회비
-
-```
-연간 절감액 = Σ (월 지출 × 할인율, min(월한도)) × 12
-```
-
-- `max_annual_fee` 이하인 카드만 후보에 포함
-- `net_benefit` 내림차순 정렬 후 상위 N개 반환
-
----
-
-## 7. Community — 커뮤니티
-
-> 모든 커뮤니티 API는 인증이 필요합니다.
-
----
-
-### 7-1. 게시글 목록 조회
-
-**GET** `/api/community/posts/`  
-인증 필요
+`GET /api/ai/cards/{card_id}/reason/`
 
 **Query Parameters**
 
-| 파라미터 | 타입 | 설명 | 예시 |
-|----------|------|------|------|
-| category | string | 카테고리 필터 | `general` / `review` / `question` / `info` |
-| search | string | 제목 또는 내용 검색 (부분 일치) | `삼성카드` |
-| page | integer | 페이지 번호 (기본값: 1) | `2` |
-| page_size | integer | 페이지당 항목 수 (기본값: 10, 최대 50) | `20` |
+| ?대쫫 | ???| ?ㅻ챸 |
+| --- | --- | --- |
+| `survey_id` | integer | ?뱀젙 CSV ?ㅻЦ 湲곗? ?ъ쑀 ?앹꽦 |
 
-**Response** `200 OK`
+**Response 200**
+
+```json
+{
+  "card_id": 4,
+  "card_name": "?쇱꽦 iD ON 移대뱶",
+  "card_company": "?쇱꽦移대뱶",
+  "reason": "??移대뱶媛 ?곹빀???댁쑀",
+  "expected_monthly_benefit": "??15,000??,
+  "tip": "?쒖슜 ??
+}
+```
+
+### 6-3. 湲덉쑖/移대뱶 梨쀫큸
+
+`POST /api/ai/chat/`
+
+**Request**
+
+```json
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "???뚮퉬 ?⑦꽩??留욌뒗 移대뱶瑜??뚮젮以?
+    }
+  ],
+  "page_context": {
+    "route_name": "report",
+    "path": "/report",
+    "visible_heading": "?뚮퉬 由ы룷??,
+    "page_kind": "?뚮퉬 由ы룷???섏씠吏",
+    "params": {},
+    "query": {}
+  }
+}
+```
+
+`messages`??`role`? `user`, `assistant`留??ъ슜?⑸땲?? ?쒕쾭??理쒓렐 8媛?硫붿떆吏留?AI???꾨떖?⑸땲??
+
+**Response 200**
+
+```json
+{
+  "reply": "梨쀫큸 ?듬?"
+}
+```
+
+## 7. Community
+
+?쎄린 API ?쇰???鍮꾨줈洹몄씤??媛?ν븯怨? ?묒꽦/?섏젙/??젣/醫뗭븘?붾뒗 ?몄쬆???꾩슂?⑸땲??
+
+### 7-1. 寃뚯떆湲 紐⑸줉/?묒꽦
+
+`GET /api/community/posts/`
+`POST /api/community/posts/`
+
+**GET Query Parameters**
+
+| ?대쫫 | ???| ?ㅻ챸 |
+| --- | --- | --- |
+| `category` | string | 寃뚯떆湲 移댄뀒怨좊━ ?꾪꽣 |
+| `search` | string | ?쒕ぉ/?댁슜 寃??|
+| `page` | integer | ?섏씠吏 踰덊샇 |
+| `page_size` | integer | ?섏씠吏 ?ш린, 理쒕? 50 |
+
+**GET Response 200**
 
 ```json
 {
@@ -980,105 +836,53 @@ Authorization: Bearer <access_token>
     {
       "id": 1,
       "user_email": "user@example.com",
-      "title": "삼성카드 사용 후기",
+      "username": "移대뱶??,
+      "title": "移대뱶 ?ъ슜 ?꾧린",
       "category": "review",
       "views_count": 120,
       "likes_count": 15,
       "comments_count": 5,
       "is_liked": false,
       "is_author": true,
-      "created_at": "2026-06-20T10:30:00+09:00"
+      "created_at": "2026-06-25T12:00:00+09:00"
     }
   ]
 }
 ```
 
----
-
-### 7-2. 게시글 작성
-
-**POST** `/api/community/posts/`  
-인증 필요
-
-**Request Body**
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| title | string | ✅ | 제목 (최대 200자) |
-| content | string | ✅ | 내용 |
-| category | string | | `general` / `review` / `question` / `info` (기본값: `general`) |
+**POST Request**
 
 ```json
 {
-  "title": "삼성카드 iD ON 사용 후기",
-  "content": "식비 할인 혜택이 좋습니다.",
+  "title": "?쇱꽦移대뱶 iD ON ?ъ슜 ?꾧린",
+  "content": "?앸퉬 ?좎씤 ?쒗깮??醫뗭븯?듬땲??",
   "category": "review"
 }
 ```
 
-**Response** `201 Created`
+### 7-2. ?멸린 寃뚯떆湲
+
+`GET /api/community/posts/popular/`
+?몄쬆 遺덊븘??
+醫뗭븘???? 議고쉶??湲곗??쇰줈 ?곸쐞 10媛?寃뚯떆湲??諛섑솚?⑸땲??
+
+### 7-3. 寃뚯떆湲 ?곸꽭/?섏젙/??젣
+
+`GET /api/community/posts/{id}/`
+`PUT /api/community/posts/{id}/`
+`DELETE /api/community/posts/{id}/`
+
+`GET`? ?몄쬆 遺덊븘?? `PUT`/`DELETE`???묒꽦???몄쬆???꾩슂?⑸땲??
+
+**Detail Response 200**
 
 ```json
 {
   "id": 1,
   "user_email": "user@example.com",
-  "title": "삼성카드 iD ON 사용 후기",
-  "content": "식비 할인 혜택이 좋습니다.",
-  "category": "review",
-  "views_count": 0,
-  "likes_count": 0,
-  "comments_count": 0,
-  "comments": [],
-  "is_liked": false,
-  "is_author": true,
-  "created_at": "2026-06-20T10:30:00+09:00",
-  "updated_at": "2026-06-20T10:30:00+09:00"
-}
-```
-
----
-
-### 7-3. 인기 게시글 조회
-
-**GET** `/api/community/posts/popular/`  
-인증 필요
-
-좋아요 수 기준 내림차순으로 상위 10개 게시글을 반환합니다 (동점 시 조회수 순).
-
-**Response** `200 OK`
-
-```json
-[
-  {
-    "id": 5,
-    "user_email": "user@example.com",
-    "title": "카드 혜택 총정리",
-    "category": "info",
-    "views_count": 980,
-    "likes_count": 72,
-    "comments_count": 18,
-    "is_liked": true,
-    "is_author": false,
-    "created_at": "2026-06-15T09:00:00+09:00"
-  }
-]
-```
-
----
-
-### 7-4. 게시글 상세 조회
-
-**GET** `/api/community/posts/{id}/`  
-인증 필요
-
-**Response** `200 OK`
-
-```json
-{
-  "id": 1,
-  "user_email": "user@example.com",
-  "title": "삼성카드 iD ON 사용 후기",
-  "content": "식비 할인 혜택이 좋습니다.",
+  "username": "移대뱶??,
+  "title": "?쇱꽦移대뱶 iD ON ?ъ슜 ?꾧린",
+  "content": "?앸퉬 ?좎씤 ?쒗깮??醫뗭븯?듬땲??",
   "category": "review",
   "views_count": 42,
   "likes_count": 5,
@@ -1087,168 +891,58 @@ Authorization: Bearer <access_token>
     {
       "id": 1,
       "user_email": "other@example.com",
-      "content": "저도 사용 중인데 좋더라고요!",
+      "username": "?ㅻⅨ?ъ슜??,
+      "content": "醫뗭? ?뺣낫 媛먯궗?⑸땲??",
+      "likes_count": 1,
+      "is_liked": false,
       "is_author": false,
-      "created_at": "2026-06-20T11:00:00+09:00",
-      "updated_at": "2026-06-20T11:00:00+09:00"
+      "created_at": "2026-06-25T12:10:00+09:00",
+      "updated_at": "2026-06-25T12:10:00+09:00"
     }
   ],
   "is_liked": false,
   "is_author": true,
-  "created_at": "2026-06-20T10:30:00+09:00",
-  "updated_at": "2026-06-20T10:30:00+09:00"
+  "created_at": "2026-06-25T12:00:00+09:00",
+  "updated_at": "2026-06-25T12:00:00+09:00"
 }
 ```
 
----
+### 7-4. ?볤? 紐⑸줉/?묒꽦
 
-### 7-5. 게시글 수정
+`GET /api/community/posts/{id}/comments/`
+`POST /api/community/posts/{id}/comments/`
 
-**PUT** `/api/community/posts/{id}/`  
-인증 필요 · 작성자 본인만 가능 · 부분 수정 가능
+`GET`? ?몄쬆 遺덊븘?? `POST`???몄쬆 ?꾩슂?낅땲??
 
-**Request Body** — 수정할 필드만 전송
-
-| 필드 | 타입 | 설명 |
-|------|------|------|
-| title | string | 제목 |
-| content | string | 내용 |
-| category | string | 카테고리 |
+**POST Request**
 
 ```json
 {
-  "title": "삼성카드 iD ON 후기 (수정)",
-  "content": "6개월 사용 후 업데이트합니다."
+  "content": "醫뗭? ?뺣낫 媛먯궗?⑸땲??"
 }
 ```
 
-**Response** `200 OK` — 수정된 게시글 상세 반환
+### 7-5. ?볤? ?섏젙/??젣
 
-| HTTP 상태 | 의미 |
-|-----------|------|
-| 200 | 수정 성공 |
-| 403 | 작성자 본인이 아님 |
-| 404 | 게시글 없음 |
+`PUT /api/community/posts/{id}/comments/{comment_id}/`
+`DELETE /api/community/posts/{id}/comments/{comment_id}/`
+?묒꽦???몄쬆 ?꾩슂
 
----
-
-### 7-6. 게시글 삭제
-
-**DELETE** `/api/community/posts/{id}/`  
-인증 필요 · 작성자 본인만 가능
-
-**Response** `204 No Content`
-
-| HTTP 상태 | 의미 |
-|-----------|------|
-| 204 | 삭제 성공 |
-| 403 | 작성자 본인이 아님 |
-| 404 | 게시글 없음 |
-
----
-
-### 7-7. 댓글 목록 조회
-
-**GET** `/api/community/posts/{id}/comments/`  
-인증 필요
-
-**Response** `200 OK`
-
-```json
-[
-  {
-    "id": 1,
-    "user_email": "other@example.com",
-    "content": "저도 사용 중인데 좋더라고요!",
-    "is_author": false,
-    "created_at": "2026-06-20T11:00:00+09:00",
-    "updated_at": "2026-06-20T11:00:00+09:00"
-  }
-]
-```
-
----
-
-### 7-8. 댓글 작성
-
-**POST** `/api/community/posts/{id}/comments/`  
-인증 필요
-
-**Request Body**
-
-| 필드 | 타입 | 필수 | 설명 |
-|------|------|------|------|
-| content | string | ✅ | 댓글 내용 |
+**PUT Request**
 
 ```json
 {
-  "content": "좋은 정보 감사합니다!"
+  "content": "?섏젙???볤? ?댁슜?낅땲??"
 }
 ```
 
-**Response** `201 Created`
+### 7-6. 寃뚯떆湲 醫뗭븘???좉?
 
-```json
-{
-  "id": 3,
-  "user_email": "user@example.com",
-  "content": "좋은 정보 감사합니다!",
-  "is_author": true,
-  "created_at": "2026-06-20T12:00:00+09:00",
-  "updated_at": "2026-06-20T12:00:00+09:00"
-}
-```
+`POST /api/community/posts/{id}/like/`
+?몄쬆 ?꾩슂
 
----
+**Response 200**
 
-### 7-9. 댓글 수정
-
-**PUT** `/api/community/posts/{id}/comments/{comment_id}/`  
-인증 필요 · 작성자 본인만 가능 · 부분 수정 가능
-
-**Request Body**
-
-```json
-{
-  "content": "수정된 댓글 내용입니다."
-}
-```
-
-**Response** `200 OK` — 수정된 댓글 반환
-
-| HTTP 상태 | 의미 |
-|-----------|------|
-| 200 | 수정 성공 |
-| 403 | 작성자 본인이 아님 |
-| 404 | 댓글 없음 |
-
----
-
-### 7-10. 댓글 삭제
-
-**DELETE** `/api/community/posts/{id}/comments/{comment_id}/`  
-인증 필요 · 작성자 본인만 가능
-
-**Response** `204 No Content`
-
-| HTTP 상태 | 의미 |
-|-----------|------|
-| 204 | 삭제 성공 |
-| 403 | 작성자 본인이 아님 |
-| 404 | 댓글 없음 |
-
----
-
-### 7-11. 게시글 좋아요 토글
-
-**POST** `/api/community/posts/{id}/like/`  
-인증 필요
-
-이미 좋아요한 게시글이면 취소, 아니면 추가합니다.
-
-**Response** `200 OK`
-
-좋아요 추가 시:
 ```json
 {
   "liked": true,
@@ -1256,42 +950,30 @@ Authorization: Bearer <access_token>
 }
 ```
 
-좋아요 취소 시:
+### 7-7. ?볤? 醫뗭븘???좉?
+
+`POST /api/community/posts/{id}/comments/{comment_id}/like/`
+?몄쬆 ?꾩슂
+
+蹂몄씤 ?볤??먮뒗 醫뗭븘?붾? ?꾨? ???놁뒿?덈떎.
+
+**Response 200**
+
 ```json
 {
-  "liked": false,
-  "likes_count": 5
+  "liked": true,
+  "likes_count": 2
 }
 ```
 
----
+### 7-8. 寃뚯떆湲 議고쉶??利앷?
 
-### 7-12. 조회수 증가
-
-**POST** `/api/community/posts/{id}/view/`  
-인증 필요
-
-게시글 조회수를 1 증가시킵니다. 게시글 상세 페이지 진입 시 별도로 호출해야 합니다.
-
-**Response** `200 OK`
+`POST /api/community/posts/{id}/view/`
+?몄쬆 遺덊븘??
+**Response 200**
 
 ```json
 {
   "views_count": 43
 }
 ```
-
----
-
-#### 게시글 카테고리 코드표
-
-| 코드 | 의미 |
-|------|------|
-| `general` | 일반 |
-| `review` | 카드 후기 |
-| `question` | 질문 |
-| `info` | 정보 |
-
----
-
-*최종 업데이트: 2026-06-24*
