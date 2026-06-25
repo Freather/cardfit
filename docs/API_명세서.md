@@ -16,6 +16,7 @@
 - [4. Transactions — 거래내역](#4-transactions--거래내역)
 - [5. Reports — 리포트](#5-reports--리포트)
 - [6. AI — 카드 추천](#6-ai--카드-추천)
+- [7. Community — 커뮤니티](#7-community--커뮤니티)
 
 ---
 
@@ -865,7 +866,6 @@ Authorization: Bearer <access_token>
       "annual_fee": 30000,
       "apply_url": "https://www.shinhancard.com",
       "total_annual_savings": 102600,
-      "annual_fee": 30000,
       "net_benefit": 72600,
       "benefit_details": [
         {
@@ -949,4 +949,349 @@ Authorization: Bearer <access_token>
 
 ---
 
-*최종 업데이트: 2026-06-08*
+## 7. Community — 커뮤니티
+
+> 모든 커뮤니티 API는 인증이 필요합니다.
+
+---
+
+### 7-1. 게시글 목록 조회
+
+**GET** `/api/community/posts/`  
+인증 필요
+
+**Query Parameters**
+
+| 파라미터 | 타입 | 설명 | 예시 |
+|----------|------|------|------|
+| category | string | 카테고리 필터 | `general` / `review` / `question` / `info` |
+| search | string | 제목 또는 내용 검색 (부분 일치) | `삼성카드` |
+| page | integer | 페이지 번호 (기본값: 1) | `2` |
+| page_size | integer | 페이지당 항목 수 (기본값: 10, 최대 50) | `20` |
+
+**Response** `200 OK`
+
+```json
+{
+  "count": 42,
+  "next": "http://localhost:8000/api/community/posts/?page=2",
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "user_email": "user@example.com",
+      "title": "삼성카드 사용 후기",
+      "category": "review",
+      "views_count": 120,
+      "likes_count": 15,
+      "comments_count": 5,
+      "is_liked": false,
+      "is_author": true,
+      "created_at": "2026-06-20T10:30:00+09:00"
+    }
+  ]
+}
+```
+
+---
+
+### 7-2. 게시글 작성
+
+**POST** `/api/community/posts/`  
+인증 필요
+
+**Request Body**
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| title | string | ✅ | 제목 (최대 200자) |
+| content | string | ✅ | 내용 |
+| category | string | | `general` / `review` / `question` / `info` (기본값: `general`) |
+
+```json
+{
+  "title": "삼성카드 iD ON 사용 후기",
+  "content": "식비 할인 혜택이 좋습니다.",
+  "category": "review"
+}
+```
+
+**Response** `201 Created`
+
+```json
+{
+  "id": 1,
+  "user_email": "user@example.com",
+  "title": "삼성카드 iD ON 사용 후기",
+  "content": "식비 할인 혜택이 좋습니다.",
+  "category": "review",
+  "views_count": 0,
+  "likes_count": 0,
+  "comments_count": 0,
+  "comments": [],
+  "is_liked": false,
+  "is_author": true,
+  "created_at": "2026-06-20T10:30:00+09:00",
+  "updated_at": "2026-06-20T10:30:00+09:00"
+}
+```
+
+---
+
+### 7-3. 인기 게시글 조회
+
+**GET** `/api/community/posts/popular/`  
+인증 필요
+
+좋아요 수 기준 내림차순으로 상위 10개 게시글을 반환합니다 (동점 시 조회수 순).
+
+**Response** `200 OK`
+
+```json
+[
+  {
+    "id": 5,
+    "user_email": "user@example.com",
+    "title": "카드 혜택 총정리",
+    "category": "info",
+    "views_count": 980,
+    "likes_count": 72,
+    "comments_count": 18,
+    "is_liked": true,
+    "is_author": false,
+    "created_at": "2026-06-15T09:00:00+09:00"
+  }
+]
+```
+
+---
+
+### 7-4. 게시글 상세 조회
+
+**GET** `/api/community/posts/{id}/`  
+인증 필요
+
+**Response** `200 OK`
+
+```json
+{
+  "id": 1,
+  "user_email": "user@example.com",
+  "title": "삼성카드 iD ON 사용 후기",
+  "content": "식비 할인 혜택이 좋습니다.",
+  "category": "review",
+  "views_count": 42,
+  "likes_count": 5,
+  "comments_count": 2,
+  "comments": [
+    {
+      "id": 1,
+      "user_email": "other@example.com",
+      "content": "저도 사용 중인데 좋더라고요!",
+      "is_author": false,
+      "created_at": "2026-06-20T11:00:00+09:00",
+      "updated_at": "2026-06-20T11:00:00+09:00"
+    }
+  ],
+  "is_liked": false,
+  "is_author": true,
+  "created_at": "2026-06-20T10:30:00+09:00",
+  "updated_at": "2026-06-20T10:30:00+09:00"
+}
+```
+
+---
+
+### 7-5. 게시글 수정
+
+**PUT** `/api/community/posts/{id}/`  
+인증 필요 · 작성자 본인만 가능 · 부분 수정 가능
+
+**Request Body** — 수정할 필드만 전송
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| title | string | 제목 |
+| content | string | 내용 |
+| category | string | 카테고리 |
+
+```json
+{
+  "title": "삼성카드 iD ON 후기 (수정)",
+  "content": "6개월 사용 후 업데이트합니다."
+}
+```
+
+**Response** `200 OK` — 수정된 게시글 상세 반환
+
+| HTTP 상태 | 의미 |
+|-----------|------|
+| 200 | 수정 성공 |
+| 403 | 작성자 본인이 아님 |
+| 404 | 게시글 없음 |
+
+---
+
+### 7-6. 게시글 삭제
+
+**DELETE** `/api/community/posts/{id}/`  
+인증 필요 · 작성자 본인만 가능
+
+**Response** `204 No Content`
+
+| HTTP 상태 | 의미 |
+|-----------|------|
+| 204 | 삭제 성공 |
+| 403 | 작성자 본인이 아님 |
+| 404 | 게시글 없음 |
+
+---
+
+### 7-7. 댓글 목록 조회
+
+**GET** `/api/community/posts/{id}/comments/`  
+인증 필요
+
+**Response** `200 OK`
+
+```json
+[
+  {
+    "id": 1,
+    "user_email": "other@example.com",
+    "content": "저도 사용 중인데 좋더라고요!",
+    "is_author": false,
+    "created_at": "2026-06-20T11:00:00+09:00",
+    "updated_at": "2026-06-20T11:00:00+09:00"
+  }
+]
+```
+
+---
+
+### 7-8. 댓글 작성
+
+**POST** `/api/community/posts/{id}/comments/`  
+인증 필요
+
+**Request Body**
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| content | string | ✅ | 댓글 내용 |
+
+```json
+{
+  "content": "좋은 정보 감사합니다!"
+}
+```
+
+**Response** `201 Created`
+
+```json
+{
+  "id": 3,
+  "user_email": "user@example.com",
+  "content": "좋은 정보 감사합니다!",
+  "is_author": true,
+  "created_at": "2026-06-20T12:00:00+09:00",
+  "updated_at": "2026-06-20T12:00:00+09:00"
+}
+```
+
+---
+
+### 7-9. 댓글 수정
+
+**PUT** `/api/community/posts/{id}/comments/{comment_id}/`  
+인증 필요 · 작성자 본인만 가능 · 부분 수정 가능
+
+**Request Body**
+
+```json
+{
+  "content": "수정된 댓글 내용입니다."
+}
+```
+
+**Response** `200 OK` — 수정된 댓글 반환
+
+| HTTP 상태 | 의미 |
+|-----------|------|
+| 200 | 수정 성공 |
+| 403 | 작성자 본인이 아님 |
+| 404 | 댓글 없음 |
+
+---
+
+### 7-10. 댓글 삭제
+
+**DELETE** `/api/community/posts/{id}/comments/{comment_id}/`  
+인증 필요 · 작성자 본인만 가능
+
+**Response** `204 No Content`
+
+| HTTP 상태 | 의미 |
+|-----------|------|
+| 204 | 삭제 성공 |
+| 403 | 작성자 본인이 아님 |
+| 404 | 댓글 없음 |
+
+---
+
+### 7-11. 게시글 좋아요 토글
+
+**POST** `/api/community/posts/{id}/like/`  
+인증 필요
+
+이미 좋아요한 게시글이면 취소, 아니면 추가합니다.
+
+**Response** `200 OK`
+
+좋아요 추가 시:
+```json
+{
+  "liked": true,
+  "likes_count": 6
+}
+```
+
+좋아요 취소 시:
+```json
+{
+  "liked": false,
+  "likes_count": 5
+}
+```
+
+---
+
+### 7-12. 조회수 증가
+
+**POST** `/api/community/posts/{id}/view/`  
+인증 필요
+
+게시글 조회수를 1 증가시킵니다. 게시글 상세 페이지 진입 시 별도로 호출해야 합니다.
+
+**Response** `200 OK`
+
+```json
+{
+  "views_count": 43
+}
+```
+
+---
+
+#### 게시글 카테고리 코드표
+
+| 코드 | 의미 |
+|------|------|
+| `general` | 일반 |
+| `review` | 카드 후기 |
+| `question` | 질문 |
+| `info` | 정보 |
+
+---
+
+*최종 업데이트: 2026-06-24*
