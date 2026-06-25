@@ -77,6 +77,19 @@ def get_provider_error_message(response, fallback):
     return fallback
 
 
+def build_kakao_token_payload(code, redirect_uri):
+    payload = {
+        'grant_type': 'authorization_code',
+        'client_id': settings.KAKAO_REST_API_KEY.strip(),
+        'redirect_uri': redirect_uri,
+        'code': code,
+    }
+    kakao_client_secret = settings.KAKAO_CLIENT_SECRET.strip()
+    if kakao_client_secret:
+        payload['client_secret'] = kakao_client_secret
+    return payload
+
+
 def build_oauth_state(provider, next_path=''):
     return signing.dumps(
         {
@@ -252,6 +265,7 @@ class KakaoOAuthStartView(APIView):
                 {
                     'provider': 'kakao',
                     'client_id': mask_secret(kakao_rest_api_key),
+                    'client_secret_configured': bool(settings.KAKAO_CLIENT_SECRET.strip()),
                     'redirect_uri': redirect_uri,
                     'required_kakao_redirect_uri': redirect_uri,
                     'message': '카카오 개발자 콘솔의 Redirect URI가 required_kakao_redirect_uri와 완전히 같아야 합니다.',
@@ -281,12 +295,7 @@ class KakaoOAuthCallbackView(APIView):
         try:
             token_response = requests.post(
                 'https://kauth.kakao.com/oauth/token',
-                data={
-                    'grant_type': 'authorization_code',
-                    'client_id': settings.KAKAO_REST_API_KEY.strip(),
-                    'redirect_uri': build_redirect_uri(request, 'kakao'),
-                    'code': code,
-                },
+                data=build_kakao_token_payload(code, build_redirect_uri(request, 'kakao')),
                 timeout=8,
             )
         except requests.RequestException:
