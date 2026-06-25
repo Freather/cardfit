@@ -211,7 +211,13 @@ class KakaoOAuthStartView(APIView):
 
     def get(self, request):
         if not settings.KAKAO_REST_API_KEY:
-            return Response({'detail': '카카오 로그인 설정이 필요합니다.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response(
+                {
+                    'detail': '카카오 로그인 설정이 필요합니다.',
+                    'missing': ['KAKAO_REST_API_KEY'],
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
         state = build_oauth_state('kakao', request.query_params.get('next', '/'))
         params = {
@@ -272,8 +278,22 @@ class NaverOAuthStartView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        if not settings.NAVER_CLIENT_ID or not settings.NAVER_CLIENT_SECRET:
-            return Response({'detail': '네이버 로그인 설정이 필요합니다.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        missing_settings = [
+            name
+            for name, value in (
+                ('NAVER_CLIENT_ID', settings.NAVER_CLIENT_ID),
+                ('NAVER_CLIENT_SECRET', settings.NAVER_CLIENT_SECRET),
+            )
+            if not value
+        ]
+        if missing_settings:
+            return Response(
+                {
+                    'detail': '네이버 로그인 설정이 필요합니다.',
+                    'missing': missing_settings,
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
         state = build_oauth_state('naver', request.query_params.get('next', '/'))
         params = {
