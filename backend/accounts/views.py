@@ -47,9 +47,17 @@ def build_redirect_uri(request, provider):
     }.get(provider)
 
     if configured:
-        return configured
+        return configured.strip()
 
     return request.build_absolute_uri(f'/api/accounts/oauth/{provider}/callback/')
+
+
+def mask_secret(value):
+    if not value:
+        return ''
+    if len(value) <= 8:
+        return '*' * len(value)
+    return f'{value[:4]}...{value[-4:]}'
 
 
 def build_oauth_state(provider, next_path=''):
@@ -210,7 +218,10 @@ class KakaoOAuthStartView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        if not settings.KAKAO_REST_API_KEY:
+        kakao_rest_api_key = settings.KAKAO_REST_API_KEY.strip()
+        redirect_uri = build_redirect_uri(request, 'kakao')
+
+        if not kakao_rest_api_key:
             return Response(
                 {
                     'detail': '카카오 로그인 설정이 필요합니다.',
@@ -219,10 +230,21 @@ class KakaoOAuthStartView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
+        if request.query_params.get('debug') == '1':
+            return Response(
+                {
+                    'provider': 'kakao',
+                    'client_id': mask_secret(kakao_rest_api_key),
+                    'redirect_uri': redirect_uri,
+                    'required_kakao_redirect_uri': redirect_uri,
+                    'message': '카카오 개발자 콘솔의 Redirect URI가 required_kakao_redirect_uri와 완전히 같아야 합니다.',
+                }
+            )
+
         state = build_oauth_state('kakao', request.query_params.get('next', '/'))
         params = {
-            'client_id': settings.KAKAO_REST_API_KEY,
-            'redirect_uri': build_redirect_uri(request, 'kakao'),
+            'client_id': kakao_rest_api_key,
+            'redirect_uri': redirect_uri,
             'response_type': 'code',
             'state': state,
         }
@@ -244,7 +266,7 @@ class KakaoOAuthCallbackView(APIView):
                 'https://kauth.kakao.com/oauth/token',
                 data={
                     'grant_type': 'authorization_code',
-                    'client_id': settings.KAKAO_REST_API_KEY,
+                    'client_id': settings.KAKAO_REST_API_KEY.strip(),
                     'redirect_uri': build_redirect_uri(request, 'kakao'),
                     'code': code,
                 },
