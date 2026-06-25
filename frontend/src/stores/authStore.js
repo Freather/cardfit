@@ -115,8 +115,6 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout() {
     const tokenForLogout = refreshToken.value
 
-    resetAuthState()
-
     if (tokenForLogout && tokenForLogout !== MOCK_REFRESH_TOKEN) {
       try {
         await authService.logout(tokenForLogout)
@@ -124,6 +122,8 @@ export const useAuthStore = defineStore('auth', () => {
         // Local logout should still succeed if the backend is unavailable.
       }
     }
+
+    resetAuthState()
   }
 
   return {

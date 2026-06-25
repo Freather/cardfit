@@ -7,6 +7,7 @@ export const benefitCategories = [
   { key: 'entertainment', label: '여가' },
   { key: 'travel', label: '여행' },
   { key: 'health', label: '의료/건강' },
+  { key: 'point', label: '포인트' },
   { key: 'other', label: '기타' },
 ]
 

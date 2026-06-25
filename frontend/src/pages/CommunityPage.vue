@@ -183,7 +183,7 @@ onMounted(async () => {
               v-for="tab in tabs"
               :key="tab.id"
               type="button"
-              class="border-b-2 px-1 pb-4 text-sm font-bold transition"
+              class="cursor-pointer border-b-2 px-1 pb-4 text-sm font-bold transition"
               :class="
                 activeTab === tab.id
                   ? 'border-[#001278] text-[#001278]'
@@ -257,7 +257,7 @@ onMounted(async () => {
               v-for="page in visiblePages"
               :key="page"
               type="button"
-              class="h-11 min-w-11 rounded-md border px-4 text-sm font-extrabold transition"
+              class="h-11 min-w-11 cursor-pointer rounded-md border px-4 text-sm font-extrabold transition"
               :class="
                 page === currentPage
                   ? 'border-[#001278] bg-[#001278] text-white'

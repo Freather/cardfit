@@ -27,7 +27,8 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        user = authenticate(email=data['email'], password=data['password'])
+        email = data['email'].strip().lower()
+        user = authenticate(email=email, password=data['password'])
         if not user:
             raise serializers.ValidationError('이메일 또는 비밀번호가 올바르지 않습니다.')
         if not user.is_active:

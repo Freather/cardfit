@@ -237,7 +237,11 @@ class FinancialChatView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        result = get_financial_chat_reply(messages)
+        page_context = request.data.get('page_context', {})
+        if not isinstance(page_context, dict):
+            page_context = {}
+
+        result = get_financial_chat_reply(messages, user=request.user, page_context=page_context)
         if result.get('error'):
             return Response(
                 {'detail': 'AI 답변을 만들지 못했어요. 다시 시도해주세요.'},

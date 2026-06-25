@@ -235,6 +235,8 @@ watch(
 function handleAddCompare() {
   if (!card.value?.id) return
 
+  wishlistMessage.value = ''
+
   const alreadyAdded = compareStore.compareCards.some(
     (item) => String(item.id) === String(card.value.id),
   )
@@ -259,6 +261,8 @@ function handleAddCompare() {
 
 async function handleToggleWishlist() {
   if (!card.value?.id || wishlistLoading.value) return
+
+  compareMessage.value = ''
 
   if (!authStore.isAuthenticated) {
     wishlistMessage.value = '로그인하면 찜할 수 있어요.'

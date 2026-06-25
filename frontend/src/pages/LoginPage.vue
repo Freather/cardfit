@@ -82,7 +82,10 @@ async function handleSubmit() {
   errorMessage.value = ''
 
   try {
-    await authStore.login({ email: email.value, password: password.value })
+    await authStore.login({
+      email: email.value.trim().toLowerCase(),
+      password: password.value,
+    })
     await authStore.fetchProfile().catch(() => null)
     router.push(getRedirectPath())
   } catch (error) {

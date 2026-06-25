@@ -20,7 +20,7 @@
 
       <div class="min-w-0 flex-1">
         <h2 class="truncate text-lg font-bold text-zinc-950">{{ card.card_name }}</h2>
-        <p class="mt-1 text-sm text-zinc-500">{{ mainBenefit }} 특화</p>
+        <p class="mt-1 text-sm text-zinc-500">{{ specialtyLabel }}</p>
         <p class="mt-1 text-sm text-zinc-500">연회비 {{ formatWon(card.annual_fee) }}원</p>
       </div>
     </div>
@@ -52,6 +52,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { getBenefitCategoryLabel } from '../../data/benefitData'
+import { getRepresentativeBenefit } from '../../utils/representativeBenefit'
 
 const props = defineProps({
   card: {
@@ -64,14 +65,28 @@ const props = defineProps({
 defineEmits(['image-error'])
 
 const mainBenefit = computed(() => {
-  const benefit = props.card.benefits?.[0]
-  if (!benefit) return '혜택'
+  const benefit = representativeBenefit.value
+  if (!benefit) return '기본 혜택'
 
-  return `${getBenefitCategoryLabel(benefit.benefit_category)} ${Number(benefit.discount_rate)}%`
+  return `${getBenefitCategoryLabel(benefit.benefit_category)} ${formatRate(benefit.discount_rate)}%`
+})
+
+const specialtyLabel = computed(() => {
+  if (!representativeBenefit.value) return '기본 혜택 카드'
+  return `${mainBenefit.value} 특화`
+})
+
+const representativeBenefit = computed(() => {
+  return getRepresentativeBenefit(props.card)
 })
 
 function formatWon(value) {
   return new Intl.NumberFormat('ko-KR').format(Number(value || 0))
+}
+
+function formatRate(value) {
+  const rate = Number(value || 0)
+  return Number.isInteger(rate) ? rate : rate.toFixed(1)
 }
 
 function formatPrevSpending(value) {
