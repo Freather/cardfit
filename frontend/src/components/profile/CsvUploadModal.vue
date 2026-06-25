@@ -6,6 +6,9 @@
     aria-modal="true"
     aria-labelledby="csv-upload-title"
     @click.self="$emit('close')"
+    @dragenter.prevent
+    @dragover.prevent
+    @drop.prevent
   >
     <section class="w-full max-w-[520px] rounded-lg bg-white shadow-2xl">
       <div class="flex items-start justify-between gap-4 border-b border-[#ececf2] px-6 py-5">
@@ -31,7 +34,7 @@
         <label
           class="flex min-h-[190px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#cbd2e7] bg-[#f8f8fb] px-6 py-8 text-center transition hover:border-[#07158f] hover:bg-[#f3f5ff]"
           @dragover.prevent
-          @drop.prevent="$emit('file-drop', $event)"
+          @drop.prevent.stop="$emit('file-drop', $event)"
         >
           <input type="file" accept=".csv,text/csv" class="sr-only" @change="$emit('file-change', $event)" />
           <span class="flex h-14 w-14 items-center justify-center rounded-full bg-[#07158f] text-white">

@@ -103,6 +103,14 @@ GMS_API_KEY = os.getenv('GMS_API_KEY', '')
 GMS_API_BASE_URL = os.getenv('GMS_API_BASE_URL', 'https://api.gms.ssafy.com/openai/v1')
 GMS_MODEL = os.getenv('GMS_MODEL', 'gpt-4o')
 
+# OAuth
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+KAKAO_REST_API_KEY = os.getenv('KAKAO_REST_API_KEY', '')
+KAKAO_REDIRECT_URI = os.getenv('KAKAO_REDIRECT_URI', '')
+NAVER_CLIENT_ID = os.getenv('NAVER_CLIENT_ID', '')
+NAVER_CLIENT_SECRET = os.getenv('NAVER_CLIENT_SECRET', '')
+NAVER_REDIRECT_URI = os.getenv('NAVER_REDIRECT_URI', '')
+
 # DRF
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

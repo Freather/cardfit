@@ -13,6 +13,7 @@ import AiRecommendationResultPage from '../pages/AiRecommendationResultPage.vue'
 import ProfilePage from '../pages/ProfilePage.vue'
 import LoginPage from '../pages/LoginPage.vue'
 import SignupPage from '../pages/SignupPage.vue'
+import OAuthCallbackPage from '../pages/OAuthCallbackPage.vue'
 import { useAuthStore } from '../stores/authStore'
 
 const routes = [
@@ -28,6 +29,7 @@ const routes = [
   { path: '/ai-recommendations/result', name: 'ai-recommendations-result', component: AiRecommendationResultPage },
   { path: '/profile', name: 'profile', component: ProfilePage, meta: { requiresAuth: true } },
   { path: '/login', name: 'login', component: LoginPage },
+  { path: '/login/oauth/callback', name: 'oauth-callback', component: OAuthCallbackPage },
   { path: '/signup', name: 'signup', component: SignupPage },
 ]
 

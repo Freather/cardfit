@@ -16,7 +16,7 @@
           :email="displayEmail"
           :age-label="displayAgeGroup"
           @edit="openProfileModal"
-          @logout="handleLogout"
+          @logout="openLogoutConfirm"
         />
 
         <ProfileWishlistCard
@@ -77,6 +77,46 @@
       @close="closeProfileModal"
       @save="handleProfileSave"
     />
+
+    <div
+      v-if="isLogoutConfirmOpen"
+      class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-4 py-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="profile-logout-confirm-title"
+      @click.self="closeLogoutConfirm"
+    >
+      <section class="w-full max-w-[420px] rounded-lg bg-white shadow-2xl">
+        <div class="border-b border-[#ececf2] px-6 py-5">
+          <p class="text-sm font-extrabold text-[#001278]">로그아웃 확인</p>
+          <h2 id="profile-logout-confirm-title" class="mt-1 text-xl font-extrabold text-[#111827]">
+            로그아웃할까요?
+          </h2>
+          <p class="mt-2 text-sm leading-6 text-[#4d5870]">
+            현재 계정에서 나가면 다시 로그인해야 서비스를 이용할 수 있어요.
+          </p>
+        </div>
+
+        <div class="flex justify-end gap-3 px-6 py-5">
+          <button
+            type="button"
+            class="inline-flex h-11 items-center justify-center rounded-md border border-[#d4d8e8] bg-white px-5 text-sm font-bold text-[#4d5870] transition hover:bg-[#f7f7fa]"
+            :disabled="isLoggingOut"
+            @click="closeLogoutConfirm"
+          >
+            취소
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-11 min-w-[104px] items-center justify-center rounded-md bg-[#001278] px-5 text-sm font-extrabold text-white transition hover:bg-[#1428a0] disabled:cursor-not-allowed disabled:bg-[#8b93c8]"
+            :disabled="isLoggingOut"
+            @click="confirmLogout"
+          >
+            {{ isLoggingOut ? '로그아웃 중' : '로그아웃' }}
+          </button>
+        </div>
+      </section>
+    </div>
   </section>
 </template>
 
@@ -115,6 +155,8 @@ const isUploading = ref(false)
 const isLoadingUploads = ref(false)
 const isProfileModalOpen = ref(false)
 const isProfileSaving = ref(false)
+const isLogoutConfirmOpen = ref(false)
+const isLoggingOut = ref(false)
 const profileError = ref('')
 const profileSuccessMessage = ref('')
 const profileForm = ref({
@@ -574,8 +616,24 @@ function formatDate(value) {
   }).format(new Date(value))
 }
 
-async function handleLogout() {
-  await authStore.logout()
-  router.push({ name: 'login' })
+function openLogoutConfirm() {
+  isLogoutConfirmOpen.value = true
+}
+
+function closeLogoutConfirm() {
+  if (isLoggingOut.value) return
+  isLogoutConfirmOpen.value = false
+}
+
+async function confirmLogout() {
+  isLoggingOut.value = true
+
+  try {
+    await authStore.logout()
+    isLogoutConfirmOpen.value = false
+    router.push({ name: 'login' })
+  } finally {
+    isLoggingOut.value = false
+  }
 }
 </script>

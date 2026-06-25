@@ -44,6 +44,16 @@ export const useAuthStore = defineStore('auth', () => {
     clearTokens()
   }
 
+  function setTokens(tokens = {}) {
+    accessToken.value = tokens.access || accessToken.value
+    refreshToken.value = tokens.refresh || refreshToken.value
+
+    saveTokens({
+      access: accessToken.value,
+      refresh: refreshToken.value,
+    })
+  }
+
   async function login(credentials) {
     isLoading.value = true
     error.value = null
@@ -133,6 +143,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoading,
     error,
     isAuthenticated,
+    setTokens,
     loginWithMock,
     login,
     register,

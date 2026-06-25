@@ -19,6 +19,7 @@ const isExampleModalOpen = ref(false)
 const insertModal = ref({
   open: false,
   type: 'link',
+  label: '',
   value: '',
   error: '',
 })
@@ -283,9 +284,11 @@ function insertList(type) {
 
 function openInsertModal(type) {
   saveEditorSelection()
+  const selectedText = type === 'link' ? window.getSelection()?.toString()?.trim() || '' : ''
   insertModal.value = {
     open: true,
     type,
+    label: selectedText,
     value: '',
     error: '',
   }
@@ -294,6 +297,7 @@ function openInsertModal(type) {
 function closeInsertModal() {
   insertModal.value.open = false
   insertModal.value.error = ''
+  insertModal.value.label = ''
   insertModal.value.value = ''
 }
 
@@ -313,7 +317,16 @@ function confirmInsertModal() {
   }
 
   if (insertModal.value.type === 'link') {
-    runEditorCommand('createLink', url)
+    const label = insertModal.value.label.trim()
+    if (!label) {
+      insertModal.value.error = '게시글에 보일 이름을 입력해주세요.'
+      return
+    }
+
+    runEditorCommand(
+      'insertHTML',
+      `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer noopener">${escapeHtml(label)}</a>`,
+    )
   } else {
     runEditorCommand('insertImage', url)
   }
@@ -641,7 +654,7 @@ async function submitPost() {
               {{ insertModal.type === 'link' ? '링크 삽입' : '이미지 삽입' }}
             </h2>
             <p class="mt-1 text-sm text-[#4d5870]">
-              {{ insertModal.type === 'link' ? '웹 주소를 입력해주세요.' : '이미지 주소를 입력해주세요.' }}
+              {{ insertModal.type === 'link' ? '게시글에 보일 이름과 연결할 주소를 입력해주세요.' : '이미지 주소를 입력해주세요.' }}
             </p>
           </div>
           <button
@@ -658,7 +671,20 @@ async function submitPost() {
         </div>
 
         <form class="px-6 py-6" @submit.prevent="confirmInsertModal">
-          <label class="grid gap-2">
+          <label v-if="insertModal.type === 'link'" class="grid gap-2">
+            <span class="text-sm font-extrabold text-[#30374d]">
+              게시글에서 보일 이름
+            </span>
+            <input
+              v-model="insertModal.label"
+              type="text"
+              class="h-12 rounded-md border border-[#d4d8e8] px-4 text-sm font-semibold text-[#111827] outline-none transition placeholder:text-[#8b93a7] focus:border-[#001278] focus:ring-2 focus:ring-[#001278]/10"
+              placeholder="예: 삼성카드 taptap O 공식 안내"
+              autofocus
+            />
+          </label>
+
+          <label class="grid gap-2" :class="insertModal.type === 'link' ? 'mt-4' : ''">
             <span class="text-sm font-extrabold text-[#30374d]">
               {{ insertModal.type === 'link' ? '링크 주소' : '이미지 주소' }}
             </span>
@@ -667,7 +693,7 @@ async function submitPost() {
               type="url"
               class="h-12 rounded-md border border-[#d4d8e8] px-4 text-sm font-semibold text-[#111827] outline-none transition placeholder:text-[#8b93a7] focus:border-[#001278] focus:ring-2 focus:ring-[#001278]/10"
               :placeholder="insertModal.type === 'link' ? 'https://example.com' : 'https://example.com/image.png'"
-              autofocus
+              :autofocus="insertModal.type !== 'link'"
             />
           </label>
 
@@ -716,6 +742,24 @@ async function submitPost() {
 
 [contenteditable] :deep(ul) {
   list-style: disc;
+}
+
+[contenteditable] :deep(a) {
+  display: inline;
+  border-radius: 4px;
+  background: rgba(0, 18, 120, 0.08);
+  color: #001278;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+[contenteditable] :deep(a)::after {
+  content: '↗';
+  margin-left: 2px;
+  font-size: 0.8em;
+  text-decoration: none;
 }
 
 [data-toolbar='ordered'],

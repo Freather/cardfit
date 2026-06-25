@@ -1,6 +1,12 @@
 import api from './api'
 
 export const authService = {
+  getOAuthStartUrl(provider, next = '/') {
+    const baseUrl = String(api.defaults.baseURL || '').replace(/\/$/, '')
+    const params = new URLSearchParams({ next })
+    return `${baseUrl}/api/accounts/oauth/${provider}/?${params.toString()}`
+  },
+
   register(payload) {
     return api.post('/api/accounts/register/', payload)
   },

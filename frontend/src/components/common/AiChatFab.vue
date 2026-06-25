@@ -326,17 +326,30 @@ const TypingMessage = defineComponent({
   name: 'TypingMessage',
   setup() {
     return () => h('div', { class: 'flex items-end justify-start' }, [
-      h('div', { class: 'min-w-56 rounded-[18px] rounded-bl-md border border-white bg-white px-4 py-3 text-sm font-bold text-[#4d5870] shadow-sm' }, [
-        h('div', { class: 'flex items-center gap-2' }, [
-          h('span', '피티가 답변을 정리하고 있어요'),
-          h('span', { class: 'typing-dots inline-flex gap-1 align-middle', 'aria-hidden': 'true' }, [
-            h('span'),
-            h('span'),
-            h('span'),
+      h('div', { class: 'min-w-[260px] overflow-hidden rounded-[18px] rounded-bl-md border border-[#dfe6ff] bg-white text-sm font-bold text-[#4d5870] shadow-sm' }, [
+        h('div', { class: 'relative px-4 py-3' }, [
+          h('span', { class: 'typing-scan absolute inset-x-0 top-0 h-full bg-[linear-gradient(90deg,transparent,rgba(0,18,120,0.08),transparent)]', 'aria-hidden': 'true' }),
+          h('div', { class: 'relative flex items-center gap-3' }, [
+            h('span', { class: 'thinking-orb relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#eef2ff]' }, [
+              h('span', { class: 'absolute h-full w-full rounded-full border border-[#001278]/30' }),
+              h('span', { class: 'h-3 w-3 rounded-full bg-[#001278]' }),
+            ]),
+            h('div', { class: 'min-w-0' }, [
+              h('p', { class: 'text-sm font-black text-[#001278]' }, '피티가 답변을 만들고 있어요'),
+              h('div', { class: 'mt-1 flex items-center gap-1.5 text-[11px] font-extrabold text-[#66729a]' }, [
+                h('span', { class: 'typing-step typing-step-1' }, '소비 맥락 확인'),
+                h('span', { class: 'text-[#b8bfd8]' }, '·'),
+                h('span', { class: 'typing-step typing-step-2' }, '카드 혜택 비교'),
+                h('span', { class: 'text-[#b8bfd8]' }, '·'),
+                h('span', { class: 'typing-step typing-step-3' }, '답변 정리'),
+              ]),
+            ]),
           ]),
-        ]),
-        h('div', { class: 'mt-3 h-1.5 overflow-hidden rounded-full bg-[#e7ecfb]' }, [
-          h('span', { class: 'typing-progress block h-full w-1/2 rounded-full bg-[linear-gradient(90deg,#001278,#4f7cff,#06b6d4)]' }),
+          h('div', { class: 'relative mt-3 grid grid-cols-3 gap-1.5', 'aria-hidden': 'true' }, [
+            h('span', { class: 'typing-block typing-block-1 h-1.5 rounded-full bg-[#001278]' }),
+            h('span', { class: 'typing-block typing-block-2 h-1.5 rounded-full bg-[#4f7cff]' }),
+            h('span', { class: 'typing-block typing-block-3 h-1.5 rounded-full bg-[#06b6d4]' }),
+          ]),
         ]),
       ]),
     ])
@@ -595,52 +608,100 @@ watch([messages, isOpen, isExpanded], scrollToBottom, { deep: true })
   font-weight: 800;
 }
 
-.typing-dots span {
-  width: 0.35rem;
-  height: 0.35rem;
-  border-radius: 9999px;
-  background: #001278;
-  opacity: 0.35;
-  animation: typing-bounce 1s infinite ease-in-out;
+.typing-scan {
+  animation: typing-scan 1.25s infinite linear;
 }
 
-.typing-dots span:nth-child(2) {
-  animation-delay: 0.15s;
+.thinking-orb > span:first-child {
+  animation: typing-pulse-ring 1.15s infinite ease-out;
 }
 
-.typing-dots span:nth-child(3) {
-  animation-delay: 0.3s;
+.thinking-orb > span:last-child {
+  animation: typing-pulse-dot 0.9s infinite ease-in-out;
 }
 
-.typing-progress {
-  animation: typing-slide 1.35s infinite ease-in-out;
+.typing-step {
+  animation: typing-step 1.8s infinite ease-in-out;
 }
 
-@keyframes typing-bounce {
-  0%,
-  80%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.35;
+.typing-step-2 {
+  animation-delay: 0.35s;
+}
+
+.typing-step-3 {
+  animation-delay: 0.7s;
+}
+
+.typing-block {
+  opacity: 0.28;
+  transform-origin: left center;
+  animation: typing-block 1.05s infinite ease-in-out;
+}
+
+.typing-block-2 {
+  animation-delay: 0.16s;
+}
+
+.typing-block-3 {
+  animation-delay: 0.32s;
+}
+
+@keyframes typing-scan {
+  from {
+    transform: translateX(-100%);
   }
 
-  40% {
-    transform: translateY(-0.2rem);
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes typing-pulse-ring {
+  0% {
+    transform: scale(0.72);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes typing-pulse-dot {
+  0%,
+  100% {
+    transform: scale(0.82);
+    opacity: 0.72;
+  }
+
+  50% {
+    transform: scale(1.12);
     opacity: 1;
   }
 }
 
-@keyframes typing-slide {
-  0% {
-    transform: translateX(-110%);
-  }
-
-  55% {
-    transform: translateX(50%);
-  }
-
+@keyframes typing-step {
+  0%,
   100% {
-    transform: translateX(210%);
+    color: #8b93a7;
+  }
+
+  35% {
+    color: #001278;
+  }
+}
+
+@keyframes typing-block {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scaleX(0.48);
+  }
+
+  45% {
+    opacity: 1;
+    transform: scaleX(1);
   }
 }
 </style>

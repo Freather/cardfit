@@ -68,7 +68,7 @@
         >
 
           <!-- Cards fan area -->
-          <div class="relative w-full h-[188px]">
+          <div v-if="walletCards.length" class="relative w-full h-[188px]">
             <div
               v-for="(card, index) in walletCards"
               :key="card?.id ?? index"
@@ -76,10 +76,11 @@
               :style="outerStyle(index)"
             >
               <button
-                class="card-btn relative w-full h-full focus:outline-none"
+                class="card-btn relative h-full w-full cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-[#00e5ff]/35 disabled:cursor-default"
                 :class="{ 'card-btn--hovered': hoveredIndex === index && selectedIndex === null }"
                 :style="innerStyle(index)"
                 :disabled="!isCardsSpread || selectedIndex !== null || !card"
+                :aria-label="`${index + 1}번째 오늘의 카드 선택`"
                 @mouseenter="onHoverEnter(index)"
                 @mouseleave="onHoverLeave"
                 @click="drawCard(index)"
@@ -114,6 +115,13 @@
                 </div>
               </button>
             </div>
+          </div>
+
+          <div
+            v-if="!walletCards.length"
+            class="flex h-[188px] w-full items-center justify-center rounded-[18px] border border-white/10 bg-white/5 px-5 text-center text-sm font-bold leading-6 text-white/60"
+          >
+            추천 카드 데이터를 불러오면 오늘의 카드 운세가 열립니다.
           </div>
 
           <!-- Fortune result box (same 320px width) -->
@@ -280,18 +288,27 @@ function resetDraw() {
   hoveredIndex.value   = null
 
   setTimeout(() => {
-    walletCards.value = shuffle(props.cards).slice(0, 3)
+    walletCards.value = pickRandomCards(props.cards)
     setTimeout(() => { isCardsSpread.value = true }, 300)
   }, 400)
 }
 
+function pickRandomCards(cards) {
+  return shuffle(cards).slice(0, 3)
+}
+
 function shuffle(arr) {
-  return [...arr].sort(() => Math.random() - 0.5)
+  const result = [...arr]
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1))
+    ;[result[index], result[randomIndex]] = [result[randomIndex], result[index]]
+  }
+  return result
 }
 
 function init() {
   if (props.cards.length === 0) return
-  walletCards.value = shuffle(props.cards).slice(0, 3)
+  walletCards.value = pickRandomCards(props.cards)
   setTimeout(() => { isCardsSpread.value = true }, 400)
 }
 

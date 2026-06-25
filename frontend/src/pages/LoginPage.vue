@@ -44,6 +44,7 @@
         v-model:password="password"
         :loading="isLoading"
         :error-message="errorMessage"
+        @oauth-login="handleOAuthLogin"
         @submit="handleSubmit"
       />
     </main>
@@ -56,6 +57,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import LoginForm from '../components/auth/LoginForm.vue'
 import { getApiErrorMessage } from '../services/api'
+import { authService } from '../services/authService'
 import { useAuthStore } from '../stores/authStore'
 
 const router = useRouter()
@@ -71,6 +73,11 @@ const isLoading = computed(() => authStore.isLoading)
 onMounted(() => {
   if (authStore.isAuthenticated) {
     router.replace(getRedirectPath())
+    return
+  }
+
+  if (route.query.error) {
+    errorMessage.value = route.query.error.toString()
   }
 })
 
@@ -94,6 +101,11 @@ async function handleSubmit() {
       '로그인하지 못했어요. 이메일과 비밀번호를 확인해보세요.',
     )
   }
+}
+
+function handleOAuthLogin(provider) {
+  errorMessage.value = ''
+  window.location.href = authService.getOAuthStartUrl(provider, getRedirectPath())
 }
 
 </script>

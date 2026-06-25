@@ -35,12 +35,6 @@
         />
       </label>
 
-      <div class="flex justify-end">
-        <button type="button" class="text-sm font-semibold text-[#001278] transition hover:text-[#1428a0] hover:underline">
-          비밀번호 찾기
-        </button>
-      </div>
-
       <div v-if="errorMessage" class="rounded-xl bg-[#ffdad6] p-4 text-sm text-[#93000a]">
         {{ errorMessage }}
       </div>
@@ -52,6 +46,29 @@
       >
         {{ loading ? '로그인 중...' : '로그인' }}
       </button>
+
+      <div class="flex items-center gap-3">
+        <span class="h-px flex-1 bg-[#e0e3ef]"></span>
+        <span class="text-xs font-bold text-[#7b8194]">또는</span>
+        <span class="h-px flex-1 bg-[#e0e3ef]"></span>
+      </div>
+
+      <div class="grid gap-3 sm:grid-cols-2">
+        <button
+          type="button"
+          class="inline-flex h-12 items-center justify-center rounded-xl bg-[#FEE500] px-4 text-sm font-black text-[#191600] transition hover:brightness-95"
+          @click="$emit('oauth-login', 'kakao')"
+        >
+          카카오로 로그인
+        </button>
+        <button
+          type="button"
+          class="inline-flex h-12 items-center justify-center rounded-xl bg-[#03C75A] px-4 text-sm font-black text-white transition hover:brightness-95"
+          @click="$emit('oauth-login', 'naver')"
+        >
+          네이버로 로그인
+        </button>
+      </div>
 
       <RouterLink
         :to="{ name: 'signup' }"
@@ -83,5 +100,5 @@ defineProps({
   },
 })
 
-defineEmits(['update:email', 'update:password', 'submit'])
+defineEmits(['update:email', 'update:password', 'submit', 'oauth-login'])
 </script>
