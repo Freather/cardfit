@@ -7,6 +7,7 @@ from .views import (
     LogoutView,
     NaverOAuthCallbackView,
     NaverOAuthStartView,
+    OAuthEmailCompleteView,
     ProfileView,
     RegisterView,
     SelectCardView,
@@ -23,4 +24,5 @@ urlpatterns = [
     path('oauth/kakao/callback/', KakaoOAuthCallbackView.as_view(), name='oauth-kakao-callback'),
     path('oauth/naver/', NaverOAuthStartView.as_view(), name='oauth-naver'),
     path('oauth/naver/callback/', NaverOAuthCallbackView.as_view(), name='oauth-naver-callback'),
+    path('oauth/email/complete/', OAuthEmailCompleteView.as_view(), name='oauth-email-complete'),
 ]

@@ -31,7 +31,21 @@ onMounted(async () => {
   const access = String(route.query.access || '')
   const refresh = String(route.query.refresh || '')
   const error = String(route.query.error || '')
+  const pendingOAuth = String(route.query.pending_oauth || '')
   const next = String(route.query.next || '/')
+
+  if (pendingOAuth) {
+    router.replace({
+      name: 'oauth-email',
+      query: {
+        token: pendingOAuth,
+        provider: route.query.provider || 'oauth',
+        nickname: route.query.nickname || '',
+        next,
+      },
+    })
+    return
+  }
 
   if (error || !access || !refresh) {
     errorMessage.value = error || '소셜 로그인 응답에 토큰이 없어요.'

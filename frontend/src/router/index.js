@@ -14,6 +14,7 @@ import ProfilePage from '../pages/ProfilePage.vue'
 import LoginPage from '../pages/LoginPage.vue'
 import SignupPage from '../pages/SignupPage.vue'
 import OAuthCallbackPage from '../pages/OAuthCallbackPage.vue'
+import OAuthEmailPage from '../pages/OAuthEmailPage.vue'
 import { useAuthStore } from '../stores/authStore'
 
 const routes = [
@@ -30,6 +31,7 @@ const routes = [
   { path: '/profile', name: 'profile', component: ProfilePage, meta: { requiresAuth: true } },
   { path: '/login', name: 'login', component: LoginPage },
   { path: '/login/oauth/callback', name: 'oauth-callback', component: OAuthCallbackPage },
+  { path: '/login/oauth/email', name: 'oauth-email', component: OAuthEmailPage },
   { path: '/signup', name: 'signup', component: SignupPage },
 ]
 

@@ -3,6 +3,8 @@ from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.core import signing
 from django.shortcuts import redirect
 from rest_framework import status
@@ -23,9 +25,10 @@ from .serializers import (
 
 
 OAUTH_STATE_SALT = 'cardfit-oauth-state'
+OAUTH_EMAIL_SALT = 'cardfit-oauth-email'
 
 
-def build_frontend_oauth_redirect(tokens=None, error='', next_path=''):
+def build_frontend_oauth_redirect(tokens=None, error='', next_path='', extra_params=None):
     frontend_url = settings.FRONTEND_URL.rstrip('/')
     params = {}
 
@@ -35,9 +38,24 @@ def build_frontend_oauth_redirect(tokens=None, error='', next_path=''):
         params['error'] = error
     if next_path:
         params['next'] = next_path
+    if extra_params:
+        params.update(extra_params)
 
     query = urlencode(params)
     return f'{frontend_url}/login/oauth/callback{f"?{query}" if query else ""}'
+
+
+def build_frontend_oauth_email_redirect(provider, pending_token, nickname='', next_path='/'):
+    frontend_url = settings.FRONTEND_URL.rstrip('/')
+    params = urlencode(
+        {
+            'provider': provider,
+            'token': pending_token,
+            'nickname': nickname or '',
+            'next': next_path or '/',
+        }
+    )
+    return f'{frontend_url}/login/oauth/email?{params}'
 
 
 def build_redirect_uri(request, provider):
@@ -111,6 +129,25 @@ def read_oauth_state(raw_state, provider):
         return None
 
     return state
+
+
+def build_pending_oauth_email_token(provider, provider_user_id, nickname=''):
+    return signing.dumps(
+        {
+            'provider': provider,
+            'provider_user_id': str(provider_user_id),
+            'nickname': nickname or '',
+            'nonce': secrets.token_urlsafe(12),
+        },
+        salt=OAUTH_EMAIL_SALT,
+    )
+
+
+def read_pending_oauth_email_token(raw_token):
+    try:
+        return signing.loads(raw_token, salt=OAUTH_EMAIL_SALT, max_age=600)
+    except signing.BadSignature:
+        return None
 
 
 def issue_tokens_for_user(user):
@@ -208,6 +245,43 @@ class LogoutView(APIView):
                 {'detail': '유효하지 않은 토큰입니다.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class OAuthEmailCompleteView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        pending_token = request.data.get('token', '')
+        email = str(request.data.get('email', '')).strip().lower()
+        next_path = str(request.data.get('next', '/') or '/')
+        pending = read_pending_oauth_email_token(pending_token)
+
+        if not pending:
+            return Response(
+                {'detail': '소셜 로그인 정보가 만료됐어요. 다시 로그인해주세요.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            validate_email(email)
+        except ValidationError:
+            return Response(
+                {'email': '올바른 이메일을 입력해주세요.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = get_or_create_oauth_user(
+            email,
+            pending.get('nickname'),
+            pending.get('provider') or 'oauth',
+        )
+        return Response(
+            {
+                'user': UserProfileSerializer(user).data,
+                'tokens': issue_tokens_for_user(user),
+                'next': next_path if next_path.startswith('/') else '/',
+            }
+        )
 
 
 class ProfileView(APIView):
@@ -335,7 +409,19 @@ class KakaoOAuthCallbackView(APIView):
         nickname = (kakao_account.get('profile') or {}).get('nickname')
 
         if not email:
-            return redirect(build_frontend_oauth_redirect(error='카카오 계정 이메일 제공 동의가 필요해요.'))
+            pending_token = build_pending_oauth_email_token(
+                'kakao',
+                profile.get('id'),
+                nickname,
+            )
+            return redirect(
+                build_frontend_oauth_email_redirect(
+                    'kakao',
+                    pending_token,
+                    nickname=nickname,
+                    next_path=state.get('next', '/'),
+                )
+            )
 
         user = get_or_create_oauth_user(email, nickname, 'kakao')
         return redirect(build_frontend_oauth_redirect(issue_tokens_for_user(user), next_path=state.get('next', '/')))

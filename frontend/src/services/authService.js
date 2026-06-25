@@ -19,6 +19,10 @@ export const authService = {
     return api.post('/api/accounts/logout/', { refresh })
   },
 
+  completeOAuthEmail(payload) {
+    return api.post('/api/accounts/oauth/email/complete/', payload)
+  },
+
   refreshToken(refresh) {
     return api.post('/api/accounts/token/refresh/', { refresh })
   },
