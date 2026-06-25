@@ -22,9 +22,10 @@ const status = ref('loading')
 const title = computed(() => (status.value === 'error' ? '로그인하지 못했어요' : '로그인 처리 중입니다'))
 const message = computed(() =>
   status.value === 'error'
-    ? '잠시 후 다시 시도하거나 일반 로그인을 이용해주세요.'
+    ? errorMessage.value || '잠시 후 다시 시도하거나 일반 로그인을 이용해주세요.'
     : '계정 정보를 확인하고 있어요.',
 )
+const errorMessage = ref('')
 
 onMounted(async () => {
   const access = String(route.query.access || '')
@@ -33,10 +34,11 @@ onMounted(async () => {
   const next = String(route.query.next || '/')
 
   if (error || !access || !refresh) {
+    errorMessage.value = error || '소셜 로그인 응답에 토큰이 없어요.'
     status.value = 'error'
     window.setTimeout(() => {
       router.replace({ name: 'login', query: error ? { error } : {} })
-    }, 1400)
+    }, 2600)
     return
   }
 

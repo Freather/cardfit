@@ -60,6 +60,23 @@ def mask_secret(value):
     return f'{value[:4]}...{value[-4:]}'
 
 
+def get_provider_error_message(response, fallback):
+    try:
+        payload = response.json()
+    except ValueError:
+        payload = {}
+
+    provider_message = (
+        payload.get('error_description')
+        or payload.get('error')
+        or payload.get('msg')
+        or payload.get('message')
+    )
+    if provider_message:
+        return f'{fallback}: {provider_message}'
+    return fallback
+
+
 def build_oauth_state(provider, next_path=''):
     return signing.dumps(
         {
@@ -272,18 +289,37 @@ class KakaoOAuthCallbackView(APIView):
                 },
                 timeout=8,
             )
-            token_response.raise_for_status()
-            access_token = token_response.json().get('access_token')
+        except requests.RequestException:
+            return redirect(build_frontend_oauth_redirect(error='카카오 토큰 발급 서버에 연결하지 못했어요.'))
 
+        if not token_response.ok:
+            return redirect(
+                build_frontend_oauth_redirect(
+                    error=get_provider_error_message(token_response, '카카오 토큰 발급에 실패했어요')
+                )
+            )
+
+        access_token = token_response.json().get('access_token')
+        if not access_token:
+            return redirect(build_frontend_oauth_redirect(error='카카오 토큰 응답을 확인하지 못했어요.'))
+
+        try:
             user_response = requests.get(
                 'https://kapi.kakao.com/v2/user/me',
                 headers={'Authorization': f'Bearer {access_token}'},
                 timeout=8,
             )
-            user_response.raise_for_status()
-            profile = user_response.json()
         except requests.RequestException:
-            return redirect(build_frontend_oauth_redirect(error='카카오 로그인 처리 중 오류가 발생했어요.'))
+            return redirect(build_frontend_oauth_redirect(error='카카오 사용자 정보 서버에 연결하지 못했어요.'))
+
+        if not user_response.ok:
+            return redirect(
+                build_frontend_oauth_redirect(
+                    error=get_provider_error_message(user_response, '카카오 사용자 정보 조회에 실패했어요')
+                )
+            )
+
+        profile = user_response.json()
 
         kakao_account = profile.get('kakao_account') or {}
         email = kakao_account.get('email')
