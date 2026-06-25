@@ -578,6 +578,7 @@ function renderMarkdown(value) {
 }
 
 watch([messages, isOpen, isExpanded], scrollToBottom, { deep: true })
+watch(isSending, scrollToBottom)
 
 </script>
 
@@ -608,6 +609,105 @@ watch([messages, isOpen, isExpanded], scrollToBottom, { deep: true })
   font-weight: 800;
 }
 
+.typing-scan {
+  animation: typing-scan 1.25s infinite linear;
+}
+
+.thinking-orb > span:first-child {
+  animation: typing-pulse-ring 1.15s infinite ease-out;
+}
+
+.thinking-orb > span:last-child {
+  animation: typing-pulse-dot 0.9s infinite ease-in-out;
+}
+
+.typing-step {
+  animation: typing-step 1.8s infinite ease-in-out;
+}
+
+.typing-step-2 {
+  animation-delay: 0.35s;
+}
+
+.typing-step-3 {
+  animation-delay: 0.7s;
+}
+
+.typing-block {
+  opacity: 0.28;
+  transform-origin: left center;
+  animation: typing-block 1.05s infinite ease-in-out;
+}
+
+.typing-block-2 {
+  animation-delay: 0.16s;
+}
+
+.typing-block-3 {
+  animation-delay: 0.32s;
+}
+
+@keyframes typing-scan {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes typing-pulse-ring {
+  0% {
+    transform: scale(0.72);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes typing-pulse-dot {
+  0%,
+  100% {
+    transform: scale(0.82);
+    opacity: 0.72;
+  }
+
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes typing-step {
+  0%,
+  100% {
+    color: #8b93a7;
+  }
+
+  35% {
+    color: #001278;
+  }
+}
+
+@keyframes typing-block {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scaleX(0.48);
+  }
+
+  45% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+</style>
+
+<style>
 .typing-scan {
   animation: typing-scan 1.25s infinite linear;
 }
