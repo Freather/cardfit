@@ -558,11 +558,13 @@ async function handleCsvUpload() {
     markCsvUploadComplete(selectedCsvFile.value.name)
     await loadSpendingUploads()
     if (result?.survey) spendingStore.latestCsvSurvey = result.survey
-    closeUploadModal()
+    isUploadModalOpen.value = false
+    uploadError.value = ''
+    selectedCsvFile.value = null
   } catch (error) {
     uploadError.value = getApiErrorMessage(
       error,
-      '업로드하지 못했어요. 파일 형식을 확인해보세요.',
+      '업로드하지 못했어요. 파일 형식을 확인하고 다시 시도해주세요.',
     )
   } finally {
     isUploading.value = false
