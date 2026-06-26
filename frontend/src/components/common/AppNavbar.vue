@@ -101,6 +101,7 @@ import { useAuthState } from '../../composables/useAuthState'
 
 const IDLE_TIMEOUT_SECONDS = 600
 const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'scroll', 'touchstart', 'mousemove']
+const IDLE_LOGOUT_REASON = 'idle-timeout'
 
 const { authStore, isLoggedIn } = useAuthState()
 const router = useRouter()
@@ -168,7 +169,7 @@ function startIdleTimer() {
     now.value = Date.now()
 
     if (remainingIdleSeconds.value <= 0 && !isLoggingOut.value) {
-      confirmLogout()
+      confirmLogout({ reason: IDLE_LOGOUT_REASON })
     }
   }, 1000)
 
@@ -188,13 +189,16 @@ function stopIdleTimer() {
   })
 }
 
-async function confirmLogout() {
+async function confirmLogout(options = {}) {
   isLoggingOut.value = true
 
   try {
     await authStore.logout()
     isLogoutConfirmOpen.value = false
-    router.push({ name: 'login' })
+    router.push({
+      name: 'login',
+      query: options.reason ? { reason: options.reason } : {},
+    })
   } finally {
     isLoggingOut.value = false
   }

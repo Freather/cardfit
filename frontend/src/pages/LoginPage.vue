@@ -67,12 +67,21 @@ const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
+const loginNoticeByReason = {
+  'idle-timeout': '장시간 사용하지 않아 로그아웃되었습니다. 다시 로그인해주세요.',
+}
 
 const isLoading = computed(() => authStore.isLoading)
 
 onMounted(() => {
   if (authStore.isAuthenticated) {
     router.replace(getRedirectPath())
+    return
+  }
+
+  const reason = route.query.reason?.toString()
+  if (reason && loginNoticeByReason[reason]) {
+    errorMessage.value = loginNoticeByReason[reason]
     return
   }
 
